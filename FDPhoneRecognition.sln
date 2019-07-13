@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FDPhoneRecognition", "FDPho
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TCPClient", "TCPClient\TCPClient.csproj", "{1554DB04-73B4-4298-A403-5835574E8995}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WriteToMemory", "WriteToMemory\WriteToMemory.csproj", "{7108EABA-1B70-4357-9517-EB052F5ABAFC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{1554DB04-73B4-4298-A403-5835574E8995}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1554DB04-73B4-4298-A403-5835574E8995}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1554DB04-73B4-4298-A403-5835574E8995}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7108EABA-1B70-4357-9517-EB052F5ABAFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7108EABA-1B70-4357-9517-EB052F5ABAFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7108EABA-1B70-4357-9517-EB052F5ABAFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7108EABA-1B70-4357-9517-EB052F5ABAFC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -18,6 +18,8 @@ namespace FDPhoneRecognition
         
         static void Main(string[] args)
         {
+            //ShareMemory t_ShareMemory = new ShareMemory();
+            //t_ShareMemory.GetShareMemory("Back");
             //Start Log
             LogIt m_Log = new LogIt(true, true);
             m_Log.SyncRun($@"{System.Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\Log.txt");
