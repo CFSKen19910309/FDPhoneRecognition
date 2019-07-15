@@ -25,7 +25,7 @@ namespace TCPClient
                 Byte[] t_Receive = new Byte[256];
                 while (true)
                 {
-                    message = "QueryISP";
+                    message = Console.ReadLine();
                     // Translate the passed message into ASCII and store it as a Byte array.
                     t_Send = System.Text.Encoding.ASCII.GetBytes(message);
 

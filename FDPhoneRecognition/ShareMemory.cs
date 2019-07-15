@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -8,36 +9,49 @@ namespace FDPhoneRecognition
 {
     class ShareMemory
     {
-        string m_FlagName = "ws1";        
+        string m_FlagName = "Back";    
         public object GetShareMemory(string f_FlagName)
         {
             try
             {
-                using (System.IO.MemoryMappedFiles.MemoryMappedFile mmf = System.IO.MemoryMappedFiles.MemoryMappedFile.OpenExisting("Back"))
+                using (System.IO.MemoryMappedFiles.MemoryMappedFile t_MMF = System.IO.MemoryMappedFiles.MemoryMappedFile.OpenExisting(f_FlagName))
                 {
+                    System.IO.BinaryReader t_BinaryReader = null;
+                    System.IO.MemoryMappedFiles.MemoryMappedViewStream t_MMViewstream = null;
 
-                    System.Threading.Mutex mutex = System.Threading.Mutex.OpenExisting("test");
-                    mutex.WaitOne();
-                    int aa = 0;
-                    using (System.IO.MemoryMappedFiles.MemoryMappedViewStream stream = mmf.CreateViewStream(0, 4))
+                    t_MMViewstream = t_MMF.CreateViewStream(0, 8);
+                    t_BinaryReader = new System.IO.BinaryReader(t_MMViewstream);
+                    byte[] t_Data = null;
+                    t_Data = t_BinaryReader.ReadBytes(4);
+                    int t_Width = BitConverter.ToInt32(t_Data, 0);
+                    t_Data = t_BinaryReader.ReadBytes(4);
+                    int t_Height = BitConverter.ToInt32(t_Data, 0);
+                    t_BinaryReader.Close();
+
+                    System.Drawing.Bitmap t_Bitmap = new System.Drawing.Bitmap(t_Width, t_Height, System.Drawing.Imaging.PixelFormat.Format8bppIndexed);
+                    System.Drawing.Imaging.ColorPalette t_ColorPalette = t_Bitmap.Palette;
+                    for (int i = 0; i < 256; i++)
                     {
-                        System.IO.BinaryReader t_Reader = new System.IO.BinaryReader(stream);
-                        byte[] rr = null;
-                        rr  = t_Reader.ReadBytes(4);
-                        int ads = BitConverter.ToInt32(rr, 0);
-                        using (System.IO.MemoryMappedFiles.MemoryMappedViewStream streams = mmf.CreateViewStream(4, ads))
-                        {
-                            System.IO.BinaryReader t_Readera = new System.IO.BinaryReader(streams);
-                            byte[] rsr = null;
-                            rsr = t_Reader.ReadBytes(ads);
-                            System.Drawing.Bitmap t_Bitmap = new System.Drawing.Bitmap(streams);
-                            t_Bitmap.Save("2.Bmp");
-                        }
-                            
-
-
+                        t_ColorPalette.Entries[i] = System.Drawing.Color.FromArgb(255,i,i,i);
                     }
-                    mutex.ReleaseMutex();
+                    t_Bitmap.Palette = t_ColorPalette;
+                    //System.Drawing.Bitmap.p
+                    System.Drawing.Imaging.BitmapData t_BitmapData = t_Bitmap.LockBits(new System.Drawing.Rectangle(0, 0, t_Width, t_Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format8bppIndexed);
+                    
+                    t_MMViewstream = t_MMF.CreateViewStream(8, t_BitmapData.Stride * t_Height);
+                    t_BinaryReader = new System.IO.BinaryReader(t_MMViewstream);
+                    t_Data = t_BinaryReader.ReadBytes(t_BitmapData.Stride * t_Height);
+
+                    System.Runtime.InteropServices.Marshal.Copy(t_Data, 0, t_BitmapData.Scan0, t_BitmapData.Stride * t_Height);
+
+                    //IntPtr t_DataIntPtr = Marshal.AllocHGlobal(t_Data.Length);
+                    //Marshal.Copy(t_Data, 0, t_DataIntPtr, t_Data.Length);
+
+                    // Call unmanaged code
+                    //Marshal.FreeHGlobal(t_DataIntPtr);
+                    //t_BitmapData.Scan0 = t_DataIntPtr;
+                    t_Bitmap.UnlockBits(t_BitmapData);
+                    t_Bitmap.Save($@"{System.Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\GetBitmap.bmp");
                 }
             }
             catch (System.IO.FileNotFoundException)

@@ -161,8 +161,10 @@ namespace FDPhoneRecognition
                                 //LogIt.PushLog($"[TCPServer][Run][WaitForClientData] ++");
                                 try
                                 {
+                                    bool t = m_Client.Client.Connected;
+                                    int trt = m_Client.Client.Available;
                                     int t_TotalByteLength = m_Stream.Read(t_DataBytes, 0, t_DataBytes.Length);
-                                    Console.WriteLine($"Connected TotalByteLength = {t_TotalByteLength}");
+                                    //Console.WriteLine($"Connected TotalByteLength = {t_TotalByteLength}");
                                     if (t_TotalByteLength != 0)
                                     {
                                         LogIt.PushLog($"[TCPServer][Run][WaitForClientData]: Receive Data Length = {t_DataBytes.Length}");
@@ -172,8 +174,9 @@ namespace FDPhoneRecognition
                                     }
                                     else
                                     {
-                                        Console.WriteLine($"Disconnect TotalByteLength = {t_TotalByteLength}"); //bool t = m_TCPListener.Server.Connected;
+                                        //Console.WriteLine($"Disconnect TotalByteLength = {t_TotalByteLength}"); //bool t = m_TCPListener.Server.Connected;
                                     }
+                                    t_DataBytes = new byte[256];
                                 }
                                 catch(Exception Ex)
                                 {
@@ -231,20 +234,22 @@ namespace FDPhoneRecognition
                 }
                 else
                 {
-                    t_Feedback = $"ACK ISP {t_ModelName}";
+                    t_Feedback = $"ACK ISP {t_ModelName}{System.Text.Encoding.ASCII.GetString(new byte[] { 0x0A })}";
                 }
                 
             }
             if(t_Data.IndexOf("QueryPMP") >= 0)
             {
                 //Get modle name
-                string t_ModelName = "Iphone6s Gray";
+                string t_ModelName = "Iphone6 Gray";
                 if (string.IsNullOrEmpty(t_ModelName) == true)
                 {
                     t_Feedback = $"ERR PMP UnSuccessful";
                 }
                 else
                 {
+                    ShareMemory t_SharedMemory = new ShareMemory();
+                    t_SharedMemory.GetShareMemory("Back");
                     t_Feedback = $"ACK PMP {t_ModelName}{System.Text.Encoding.ASCII.GetString(new byte[] { 0x0A })}";
                 }
             }

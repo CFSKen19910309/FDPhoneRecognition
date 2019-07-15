@@ -48,7 +48,6 @@ namespace FDPhoneRecognition
             t_LogThread.Start(m_SavePath);
             m_WaitForThreadStart.WaitOne();
             PushLog("[LogIt][SyncRun]: --");
-
         }
         private void LogThread(object f_SavePath)
         {

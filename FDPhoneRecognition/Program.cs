@@ -15,13 +15,10 @@ namespace FDPhoneRecognition
     {
         public static string t_EventName = "FDPhoneRecognitionEvent";
         public static string t_StopEventName = "StopEvent";
-        
         static void Main(string[] args)
         {
-            //ShareMemory t_ShareMemory = new ShareMemory();
-            //t_ShareMemory.GetShareMemory("Back");
             //Start Log
-            LogIt m_Log = new LogIt(true, true);
+            LogIt m_Log = new LogIt(false, true);
             m_Log.SyncRun($@"{System.Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\Log.txt");
             //Get the input parameters
             System.Configuration.Install.InstallContext t_args = new System.Configuration.Install.InstallContext(null, args);
