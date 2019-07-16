@@ -9,12 +9,22 @@ namespace FDPhoneRecognition
 {
     class ShareMemory
     {
-        string m_FlagName = "Back";    
-        public object GetShareMemory(string f_FlagName)
+        string m_FlagName = string.Empty;
+        public ShareMemory(string f_FlagName)
+        {
+            m_FlagName = f_FlagName;
+        }
+        public void SyncGetMemory()
+        {
+            System.Threading.Thread t_Thread = new System.Threading.Thread(new System.Threading.ThreadStart(GetShareMemory));
+            t_Thread.Start();
+            //Call Back
+        }
+        public void GetShareMemory()
         {
             try
             {
-                using (System.IO.MemoryMappedFiles.MemoryMappedFile t_MMF = System.IO.MemoryMappedFiles.MemoryMappedFile.OpenExisting(f_FlagName))
+                using (System.IO.MemoryMappedFiles.MemoryMappedFile t_MMF = System.IO.MemoryMappedFiles.MemoryMappedFile.OpenExisting(m_FlagName))
                 {
                     System.IO.BinaryReader t_BinaryReader = null;
                     System.IO.MemoryMappedFiles.MemoryMappedViewStream t_MMViewstream = null;
@@ -72,7 +82,7 @@ namespace FDPhoneRecognition
             //t_MemoryMappedViewStream.Read(t_BitmapByte, 2, (int)t_DataLength);
             System.Drawing.Bitmap t = new System.Drawing.Bitmap(t_MemoryMappedViewStream);
             */
-            return null;
+            return;
         }
         public struct MyColor
         {

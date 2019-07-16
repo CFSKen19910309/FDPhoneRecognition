@@ -85,6 +85,10 @@ namespace FDPhoneRecognition
         /// </summary>
         System.Net.Sockets.NetworkStream m_Stream = null;
         
+        static private string m_ColorSizeModelName = string.Empty;
+        static private string m_MemoryStation = string.Empty;
+        static private string m_ModelName = string.Empty;
+
         
         /// <summary>
         /// constuct the TCPServer
@@ -219,6 +223,7 @@ namespace FDPhoneRecognition
         /// <returns></returns>
         private string DecisionTask(byte[] f_DataBytes, int f_DataLength)
         {
+            
             // Translate data bytes to a ASCII string.
             LogIt.PushLog($"[TCPServer][DecisionTask] ++");
             string t_Data = System.Text.Encoding.ASCII.GetString(f_DataBytes, 0, f_DataLength);
@@ -227,37 +232,49 @@ namespace FDPhoneRecognition
             if (t_Data.IndexOf("QueryISP") >= 0)
             {
                 //Mapping table when get size and color
-                string t_ModelName = "Iphone6s Gray";
-                if(string.IsNullOrEmpty(t_ModelName) == true)
+                //Start Chris Color and Size Detect
+                m_ColorSizeModelName = "Iphone6s Gray";
+                if(string.IsNullOrEmpty(m_ColorSizeModelName) == true)
                 {
                     t_Feedback = $"ERR ISP UnSuccessful";
                 }
                 else
                 {
-                    t_Feedback = $"ACK ISP {t_ModelName}{System.Text.Encoding.ASCII.GetString(new byte[] { 0x0A })}";
+                    t_Feedback = $"ACK ISP {m_ColorSizeModelName}{System.Text.Encoding.ASCII.GetString(new byte[] { 0x0A })}";
                 }
-                
+                byte[] msg = System.Text.Encoding.ASCII.GetBytes(t_Feedback);
+                m_Stream.Write(msg, 0, msg.Length);
             }
             if(t_Data.IndexOf("QueryPMP") >= 0)
             {
                 //Get modle name
-                string t_ModelName = "Iphone6 Gray";
-                if (string.IsNullOrEmpty(t_ModelName) == true)
+                m_ModelName = "Iphone6 Gray";
+                if (string.IsNullOrEmpty(m_ModelName) == true)
                 {
                     t_Feedback = $"ERR PMP UnSuccessful";
                 }
                 else
                 {
-                    ShareMemory t_SharedMemory = new ShareMemory();
-                    t_SharedMemory.GetShareMemory("Back");
-                    t_Feedback = $"ACK PMP {t_ModelName}{System.Text.Encoding.ASCII.GetString(new byte[] { 0x0A })}";
+                    t_Feedback = $"ACK PMP {m_ModelName}{System.Text.Encoding.ASCII.GetString(new byte[] { 0x0A })}";
                 }
+                byte[] msg = System.Text.Encoding.ASCII.GetBytes(t_Feedback);
+                m_Stream.Write(msg, 0, msg.Length);
+            }
+            if(t_Data.IndexOf("MMI") >=0)
+            {
+                m_MemoryStation = t_Data.Substring(3).Trim();
+                t_Feedback = $"ACK MMI {m_MemoryStation}{System.Text.Encoding.ASCII.GetString(new byte[] { 0x0A })}";
+
+                byte[] msg = System.Text.Encoding.ASCII.GetBytes(t_Feedback);
+                m_Stream.Write(msg, 0, msg.Length);
+
+                ShareMemory t_SharedMemory = new ShareMemory(m_MemoryStation);
+                t_SharedMemory.SyncGetMemory();
+
+                //Start Chris Model Detect
             }
             // Process the data sent by the client.
             LogIt.PushLog($"[TCPServer][DecisionTask]: Send Data = {t_Feedback}");
-            
-            byte[] msg = System.Text.Encoding.ASCII.GetBytes(t_Feedback);
-            m_Stream.Write(msg, 0, msg.Length);
             LogIt.PushLog($"[TCPServer][DecisionTask] --");
             return string.Empty ;
         }

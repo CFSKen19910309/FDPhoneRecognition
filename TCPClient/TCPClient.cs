@@ -27,16 +27,17 @@ namespace TCPClient
                 {
                     message = Console.ReadLine();
                     // Translate the passed message into ASCII and store it as a Byte array.
+                    message = message + System.Text.Encoding.ASCII.GetString(new byte[] { 0x0A });
                     t_Send = System.Text.Encoding.ASCII.GetBytes(message);
 
                 // Get a client stream for reading and writing.
                 //  Stream stream = client.GetStream();
 
-            
+                    
                     // Send the message to the connected TcpServer. 
                     stream.Write(t_Send, 0, t_Send.Length);
 
-                Console.WriteLine("Sent: {0}", message);
+                    Console.WriteLine("Sent: {0}", message);
 
                 // Receive the TcpServer.response.
 
