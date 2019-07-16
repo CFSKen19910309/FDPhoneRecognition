@@ -14,8 +14,48 @@ namespace FDPhoneRecognition
     class Program
     {
         public static string t_EventName = "FDPhoneRecognitionEvent";
-        public static string t_StopEventName = "StopEvent";
+        public static string t_StopEventName = "FDPhoneRecognitionServerEvent";
+        public static void logIt(String msg)
+        {
+            System.Diagnostics.Trace.WriteLine(msg);
+        }
         static void Main(string[] args)
+        {
+            System.Configuration.Install.InstallContext t_args = new System.Configuration.Install.InstallContext(null, args);
+            if (t_args.IsParameterTrue("debug"))
+            {
+                System.Console.WriteLine("Wait for debug, press any key to continue...");
+                System.Console.ReadKey();
+            }
+            if (t_args.IsParameterTrue("Start-TCPServer"))
+            {
+                bool own;
+                System.Threading.EventWaitHandle e = new System.Threading.EventWaitHandle(false, System.Threading.EventResetMode.ManualReset, t_StopEventName, out own);
+                if (own)
+                {
+                    //Task t = Task.Run(() => TCPServer.start(e));
+                    TCPServer.start(e, t_args.Parameters);
+                }
+                else
+                {
+                    // server already running. just quit
+                }
+            }
+            else if (t_args.IsParameterTrue("Kill-TCPServer"))
+            {
+                try
+                {
+                    System.Threading.EventWaitHandle t_TCPQuit = System.Threading.EventWaitHandle.OpenExisting(t_StopEventName);
+                    t_TCPQuit.Set();
+                }
+                catch (Exception) { }
+            }
+            else
+            {
+
+            }
+        }
+        static void Main_1(string[] args)
         {
             //Start Log
             LogIt m_Log = new LogIt(false, true);

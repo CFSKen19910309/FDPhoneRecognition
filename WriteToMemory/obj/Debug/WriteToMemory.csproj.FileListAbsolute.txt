@@ -5,3 +5,10 @@ C:\Users\CFSKe\Desktop\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.
 C:\Users\CFSKe\Desktop\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.exe
 C:\Users\CFSKe\Desktop\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.pdb
 C:\Users\CFSKe\Desktop\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.csprojAssemblyReference.cache
+C:\Users\qa\Source\Repos\CFSKen19910309\FDPhoneRecognition\WriteToMemory\bin\Debug\WriteToMemory.exe.config
+C:\Users\qa\Source\Repos\CFSKen19910309\FDPhoneRecognition\WriteToMemory\bin\Debug\WriteToMemory.exe
+C:\Users\qa\Source\Repos\CFSKen19910309\FDPhoneRecognition\WriteToMemory\bin\Debug\WriteToMemory.pdb
+C:\Users\qa\Source\Repos\CFSKen19910309\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.csprojAssemblyReference.cache
+C:\Users\qa\Source\Repos\CFSKen19910309\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.csproj.CoreCompileInputs.cache
+C:\Users\qa\Source\Repos\CFSKen19910309\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.exe
+C:\Users\qa\Source\Repos\CFSKen19910309\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.pdb

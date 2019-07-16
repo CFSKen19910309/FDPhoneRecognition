@@ -67,6 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="doc\FDI Phone Recognition System Communication Protocol 1.1.pdf" />
     <None Include="FDData\FDPhoneRecognition\SystemFile\ModelMappingPMP.json" />
     <None Include="packages.config" />
     <None Include="FDData\FDPhoneRecognition\SystemFile\ModelMappingISP.json" />

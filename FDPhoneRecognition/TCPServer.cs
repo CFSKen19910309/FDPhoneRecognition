@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -292,5 +294,63 @@ namespace FDPhoneRecognition
             LogIt.PushLog($"[TCPServer][DoAcceptTCPClientCallback] --");
         }
 
+        #region static functions
+        public static void start(System.Threading.EventWaitHandle quitEvent, System.Collections.Specialized.StringDictionary args)
+        {
+            Program.logIt("TCPServer::start: ++");
+            int t_Port = 6280;
+            if (args.ContainsKey("port"))
+            {
+                if(!Int32.TryParse(args["port"], out t_Port))
+                {
+                    t_Port = 6280;
+                }
+            }
+            try
+            {
+                TcpListener server = new TcpListener(IPAddress.Loopback, t_Port);
+                server.Start();
+                server.BeginAcceptSocket(new AsyncCallback(DoAcceptClientCallback), server);
+
+                Console.WriteLine("Server is started. press any key to terminate.");
+                while (quitEvent.WaitOne(1000))
+                {
+                    if (Console.KeyAvailable)
+                        break;
+                }
+            }
+            catch (Exception) { }
+            Program.logIt("TCPServer::start: --");
+        }
+        static void DoAcceptClientCallback(IAsyncResult ar)
+        {
+            Program.logIt("DoAcceptTcpClientCallback: ++");
+            try
+            {
+                TcpListener listener = (TcpListener)ar.AsyncState;
+                Socket client = listener.EndAcceptSocket(ar);
+                new TaskFactory().StartNew(new Action<object>((c) =>
+                {
+                    handle_client((Socket)c);
+                }), client);
+                listener.BeginAcceptSocket(new AsyncCallback(DoAcceptClientCallback), listener);
+            }
+            catch (Exception) { }
+            Program.logIt("DoAcceptTcpClientCallback: --");
+        }
+        static void handle_client(Socket client)
+        {
+            Program.logIt("handle_client: ++");
+            try
+            {
+                bool done = false;
+                while (!done)
+                {
+                }
+            }
+            catch (Exception) { }
+            Program.logIt("handle_client: --");
+        }
+        #endregion
     }
 }

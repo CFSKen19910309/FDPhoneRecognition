@@ -5,3 +5,10 @@ C:\Users\CFSKe\Desktop\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.csprojAs
 C:\Users\CFSKe\Desktop\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.csproj.CoreCompileInputs.cache
 C:\Users\CFSKe\Desktop\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.exe
 C:\Users\CFSKe\Desktop\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.pdb
+C:\Users\qa\Source\Repos\CFSKen19910309\FDPhoneRecognition\TCPClient\bin\Debug\TCPClient.exe.config
+C:\Users\qa\Source\Repos\CFSKen19910309\FDPhoneRecognition\TCPClient\bin\Debug\TCPClient.exe
+C:\Users\qa\Source\Repos\CFSKen19910309\FDPhoneRecognition\TCPClient\bin\Debug\TCPClient.pdb
+C:\Users\qa\Source\Repos\CFSKen19910309\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.csprojAssemblyReference.cache
+C:\Users\qa\Source\Repos\CFSKen19910309\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.csproj.CoreCompileInputs.cache
+C:\Users\qa\Source\Repos\CFSKen19910309\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.exe
+C:\Users\qa\Source\Repos\CFSKen19910309\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.pdb
