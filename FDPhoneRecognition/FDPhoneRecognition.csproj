@@ -72,5 +72,8 @@
     <None Include="packages.config" />
     <None Include="FDData\FDPhoneRecognition\SystemFile\ModelMappingISP.json" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="readme.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

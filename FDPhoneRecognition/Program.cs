@@ -52,7 +52,11 @@ namespace FDPhoneRecognition
             }
             else
             {
-
+                Dictionary<string, object> dic = new Dictionary<string, object>();
+                dic.Add("one", 1);
+                dic.Add("two", 2);
+                int i = (int)dic["one"];
+                int j = (int)dic?["zero"];
             }
         }
         static void Main_1(string[] args)

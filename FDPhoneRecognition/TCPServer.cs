@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FDPhoneRecognition
@@ -313,10 +315,13 @@ namespace FDPhoneRecognition
                 server.BeginAcceptSocket(new AsyncCallback(DoAcceptClientCallback), server);
 
                 Console.WriteLine("Server is started. press any key to terminate.");
-                while (quitEvent.WaitOne(1000))
+                while (!quitEvent.WaitOne(1000))
                 {
                     if (Console.KeyAvailable)
+                    {
+                        Program.logIt("TCPServer::start: is going to be terminated by user key input.");
                         break;
+                    }
                 }
             }
             catch (Exception) { }
@@ -341,15 +346,251 @@ namespace FDPhoneRecognition
         static void handle_client(Socket client)
         {
             Program.logIt("handle_client: ++");
+            MemoryStream ms = new MemoryStream();
+            Dictionary<string, object> current_task = null;
             try
             {
-                bool done = false;
-                while (!done)
+                while (client.Connected)
                 {
+                    if(client.Connected && client.Available>0)
+                    {
+                        byte[] buf = new byte[client.Available];
+                        int r = client.Receive(buf);
+                        ms.Write(buf, 0, r);
+                    }
+                    // check if incoming data complete, 
+                    // Command is terminated by LF (line feed) (0x0a)
+                    if (ms.Length > 0)
+                    {
+                        byte[] data = ms.ToArray();
+                        if (data.Last() == 0x0a)
+                        {
+                            string cmd = System.Text.Encoding.UTF8.GetString(data);
+                            ms.SetLength(0);
+                            Program.logIt($"handle_client: recv command: {cmd}");
+                            Tuple<int, string> res = handle_command(cmd.Split(null), ref current_task);
+                            if (res.Item1==0)
+                            {
+                                // task started success.
+                            }
+                            else if (res.Item1 == 3)
+                            {
+                                // task cancelled
+                                string s = $"ERR {res.Item2} Abort{System.Environment.NewLine}";
+                                client.Send(System.Text.Encoding.UTF8.GetBytes(s));
+                            }
+                            else
+                            {
+                                // error,
+                                string s = $"ERR  ";
+                            }
+                        }
+                    }
+                    if (current_task != null)
+                    {
+                        object o;
+                        if(current_task.TryGetValue("task", out o))
+                        {
+                            Task<Dictionary<string, object>> t = (Task<Dictionary<string, object>>)o;
+                            if (t.IsCompleted)
+                            {
+                                // completed, get result
+                                Tuple<bool, string> res = handle_command_complete(current_task);
+                                if(res.Item1)
+                                    client.Send(System.Text.Encoding.UTF8.GetBytes(res.Item2));
+                            }
+                            else if (t.IsCanceled)
+                            {
+                                // cancelled
+                            }
+                            else if (t.IsFaulted)
+                            {
+                                // unhandled exception
+                            }
+                        }
+                    }
+                    System.Threading.Thread.Sleep(1000);
                 }
             }
             catch (Exception) { }
             Program.logIt("handle_client: --");
+        }
+        static Tuple<bool, string> handle_command_complete(Dictionary<string,object> args)
+        {
+            object o;
+            string tid=string.Empty;
+            bool ret = false;
+            string response = string.Empty;
+            if (args.TryGetValue("id", out o))
+                tid = o as string;
+            if (string.Compare(tid, "Load", true) == 0)
+            {
+                // prepare response for command QueryLoad
+            }
+            return new Tuple<bool, string>(ret, response);
+        }
+        static Tuple<int,string> handle_command(string[] cmds, ref Dictionary<string,object> current_task)
+        {
+            int error = -1;
+            string id = string.Empty;
+            Program.logIt($"handle_command: ++ {string.Join(" ", cmds)}");
+            if (string.Compare(cmds[0], "Abort", true) == 0)
+            {
+                if (current_task == null)
+                {
+                    Program.logIt($"handle_command: no current task can be aborted");
+                    error = 2;
+                }
+                else
+                {
+                    try
+                    {
+                        object o;
+                        if (current_task.TryGetValue("CancellationTokenSource", out o))
+                        {
+                            CancellationTokenSource cts = (CancellationTokenSource)o;
+                            cts.Cancel();
+                            if (current_task.TryGetValue("id", out o))
+                                id = o as string;
+                            error = 3;
+                        }
+                    }
+                    catch (Exception) { }
+                }
+            }
+            else
+            {
+                if (current_task != null)
+                {
+                    Program.logIt($"handle_command: current task is still running. Cannot start another command.");
+                    error = 1;
+                }
+                else
+                {
+                    if (string.Compare(cmds[0], "QueryISP", true) == 0)
+                    {
+                        // wait for QueryISP.
+                        // return only when 1) QueryISP return, or 2) abort called
+                        id = "ISP";
+                        var tokenSource = new CancellationTokenSource();
+                        Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
+                        {
+                            Dictionary<string, object> ret = new Dictionary<string, object>();
+                            CancellationToken ct = (CancellationToken)o;
+                            while (true)
+                            {
+                                System.Threading.Thread.Sleep(1000);
+                                if (ct.IsCancellationRequested)
+                                {
+                                    Program.logIt($"handle_command: QueryISP cancelled.");
+                                    break;
+                                }
+                            }
+                            return ret;
+                        }, tokenSource.Token);
+                        error = 0;
+                        current_task = new Dictionary<string, object>();
+                        current_task.Add("CancellationTokenSource", tokenSource);
+                        current_task.Add("task", t);
+                        current_task.Add("id", id);
+                        current_task.Add("starttime", DateTime.Now);
+                    }
+                    else if (string.Compare(cmds[0], "QueryPMP", true) == 0)
+                    {
+                        // wait for QueryPMP.
+                        // return only when 1) QueryPMP return, or 2) abort called
+                        id = "PMP";
+                        var tokenSource = new CancellationTokenSource();
+                        Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
+                        {
+                            Dictionary<string, object> ret = new Dictionary<string, object>();
+                            CancellationToken ct = (CancellationToken)o;
+                            while (true)
+                            {
+                                System.Threading.Thread.Sleep(1000);
+                                if (ct.IsCancellationRequested)
+                                {
+                                    Program.logIt($"handle_command: QueryISP cancelled.");
+                                    break;
+                                }
+                            }
+                            return ret;
+                        }, tokenSource.Token);
+                        error = 0;
+                        current_task = new Dictionary<string, object>();
+                        current_task.Add("CancellationTokenSource", tokenSource);
+                        current_task.Add("task", t);
+                        current_task.Add("id", id);
+                        current_task.Add("starttime", DateTime.Now);
+                    }
+                    else if (string.Compare(cmds[0], "MMI", true) == 0)
+                    {
+
+                    }
+                    else if (string.Compare(cmds[0], "QueryLoad", true) == 0)
+                    {
+                        // wait for user load the device.
+                        // return only when 1) device loaded, or 2) abort called
+                        id = "Load";
+                        var tokenSource = new CancellationTokenSource();
+                        Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
+                        {
+                            Dictionary<string, object> ret = new Dictionary<string, object>();
+                            CancellationToken ct = (CancellationToken)o;
+                            while (true)
+                            {
+                                System.Threading.Thread.Sleep(1000);
+                                if (ct.IsCancellationRequested)
+                                {
+                                    Program.logIt($"handle_command: QueryLoad cancelled.");
+                                    break;
+                                }
+                            }
+                            return ret;
+                        }, tokenSource.Token);
+                        error = 0;
+                        current_task = new Dictionary<string, object>();
+                        current_task.Add("CancellationTokenSource", tokenSource);
+                        current_task.Add("task", t);
+                        current_task.Add("id", id);
+                        current_task.Add("starttime", DateTime.Now);
+                    }
+                    else if (string.Compare(cmds[0], "QueryUnload", true) == 0)
+                    {
+                        // wait for user unload the device.
+                        // return only when 1) device loaded, or 2) abort called
+                        id = "Unload";
+                        var tokenSource = new CancellationTokenSource();
+                        Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
+                        {
+                            Dictionary<string, object> ret = new Dictionary<string, object>();
+                            CancellationToken ct = (CancellationToken)o;
+                            while (true)
+                            {
+                                System.Threading.Thread.Sleep(1000);
+                                if (ct.IsCancellationRequested)
+                                {
+                                    Program.logIt($"handle_command: QueryUnload cancelled.");
+                                    break;
+                                }
+                            }
+                            return ret;
+                        }, tokenSource.Token);
+                        error = 0;
+                        current_task = new Dictionary<string, object>();
+                        current_task.Add("CancellationTokenSource", tokenSource);
+                        current_task.Add("task", t);
+                        current_task.Add("id", id);
+                        current_task.Add("starttime", DateTime.Now);
+                    }
+                    else
+                    {
+
+                    }
+                }
+            }
+            Program.logIt($"handle_command: -- ret={error}");
+            return new Tuple<int, string>(error,id);
         }
         #endregion
     }
