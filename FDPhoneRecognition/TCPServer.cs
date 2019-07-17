@@ -460,7 +460,7 @@ namespace FDPhoneRecognition
                             CancellationTokenSource cts = (CancellationTokenSource)o;
                             cts.Cancel();
                             if (current_task.TryGetValue("id", out o))
-                                response = $"ERR {o as string} Abort{System.Environment.NewLine}";
+                                response = $"ERR {o as string} Abort\n";
                             error = 3;
                         }
                     }
@@ -472,7 +472,7 @@ namespace FDPhoneRecognition
                 if (current_task == null)
                 {
                     Program.logIt($"handle_command: not received MMI command");
-                    response = $"ERR PMP no memory map image{System.Environment.NewLine}";
+                    response = $"ERR PMP no memory map image\n";
                     error = 5;
                 }
                 else
@@ -529,7 +529,7 @@ namespace FDPhoneRecognition
                             fn = cmds[1];
                             using (System.IO.MemoryMappedFiles.MemoryMappedFile mmf = System.IO.MemoryMappedFiles.MemoryMappedFile.OpenExisting(fn))
                             {
-                                response = $"ACK MMI {fn}{System.Environment.NewLine}";
+                                response = $"ACK MMI {fn}\n";
                             }
                             var tokenSource = new CancellationTokenSource();
                             Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
@@ -556,7 +556,7 @@ namespace FDPhoneRecognition
                         }
                         catch (Exception)
                         {
-                            response = $"ERR MMI {fn} open fail{System.Environment.NewLine}";
+                            response = $"ERR MMI {fn} open fail\n";
                         }
                     }
                     else if (string.Compare(cmds[0], "QueryLoad", true) == 0)
