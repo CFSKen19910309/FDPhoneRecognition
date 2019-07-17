@@ -14,7 +14,7 @@ namespace WriteToMemory
     {
         static void Main(string[] args)
         {
-            System.Drawing.Bitmap t_Bitmap = new System.Drawing.Bitmap(@"C:\Users\CFSKe\Desktop\FDPhoneRecognition\WriteToMemory\bin\Debug\1.bmp");
+            System.Drawing.Bitmap t_Bitmap = new System.Drawing.Bitmap(@"C:\Tools\avia\images\Apple_logo.png");
             System.Drawing.Imaging.BitmapData t_BitmapData = t_Bitmap.LockBits(new System.Drawing.Rectangle(0, 0, t_Bitmap.Width, t_Bitmap.Height), ImageLockMode.ReadOnly, PixelFormat.Format8bppIndexed);
             IntPtr t_IntPtr = t_BitmapData.Scan0;
             int t_DataLength = Math.Abs(t_BitmapData.Stride) * t_Bitmap.Height;

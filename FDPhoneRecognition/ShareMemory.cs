@@ -10,9 +10,11 @@ namespace FDPhoneRecognition
     class ShareMemory
     {
         string m_FlagName = string.Empty;
-        public ShareMemory(string f_FlagName)
+        string m_targetFilename = string.Empty;
+        public ShareMemory(string f_FlagName, string targetfilename)
         {
             m_FlagName = f_FlagName;
+            m_targetFilename = targetfilename;
         }
         public void SyncGetMemory()
         {
@@ -62,6 +64,7 @@ namespace FDPhoneRecognition
                     //t_BitmapData.Scan0 = t_DataIntPtr;
                     t_Bitmap.UnlockBits(t_BitmapData);
                     t_Bitmap.Save($@"{System.Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\GetBitmap.bmp");
+                    t_Bitmap.Save(m_targetFilename);
                 }
             }
             catch (System.IO.FileNotFoundException)

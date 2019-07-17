@@ -272,7 +272,7 @@ namespace FDPhoneRecognition
                 byte[] msg = System.Text.Encoding.ASCII.GetBytes(t_Feedback);
                 m_Stream.Write(msg, 0, msg.Length);
 
-                ShareMemory t_SharedMemory = new ShareMemory(m_MemoryStation);
+                ShareMemory t_SharedMemory = new ShareMemory(m_MemoryStation, string.Empty);
                 t_SharedMemory.SyncGetMemory();
 
                 //Start Chris Model Detect
@@ -376,8 +376,17 @@ namespace FDPhoneRecognition
                             else if (res.Item1 == 3)
                             {
                                 // task cancelled
-                                string s = $"ERR {res.Item2} Abort{System.Environment.NewLine}";
-                                client.Send(System.Text.Encoding.UTF8.GetBytes(s));
+                                client.Send(System.Text.Encoding.UTF8.GetBytes(res.Item2));
+                            }
+                            else if (res.Item1 == 4)
+                            {
+                                // return "ACK MMI {station name}"
+                                client.Send(System.Text.Encoding.UTF8.GetBytes(res.Item2));
+                            }
+                            else if (res.Item1 == 5)
+                            {
+                                // return "ERR PMP {reason}"
+                                client.Send(System.Text.Encoding.UTF8.GetBytes(res.Item2));
                             }
                             else
                             {
@@ -432,7 +441,7 @@ namespace FDPhoneRecognition
         static Tuple<int,string> handle_command(string[] cmds, ref Dictionary<string,object> current_task)
         {
             int error = -1;
-            string id = string.Empty;
+            string response = string.Empty;
             Program.logIt($"handle_command: ++ {string.Join(" ", cmds)}");
             if (string.Compare(cmds[0], "Abort", true) == 0)
             {
@@ -451,11 +460,24 @@ namespace FDPhoneRecognition
                             CancellationTokenSource cts = (CancellationTokenSource)o;
                             cts.Cancel();
                             if (current_task.TryGetValue("id", out o))
-                                id = o as string;
+                                response = $"ERR {o as string} Abort{System.Environment.NewLine}";
                             error = 3;
                         }
                     }
                     catch (Exception) { }
+                }
+            }
+            else if (string.Compare(cmds[0], "QueryPMP", true) == 0)
+            {
+                if (current_task == null)
+                {
+                    Program.logIt($"handle_command: not received MMI command");
+                    response = $"ERR PMP no memory map image{System.Environment.NewLine}";
+                    error = 5;
+                }
+                else
+                {
+                    // continue wait.
                 }
             }
             else
@@ -471,7 +493,6 @@ namespace FDPhoneRecognition
                     {
                         // wait for QueryISP.
                         // return only when 1) QueryISP return, or 2) abort called
-                        id = "ISP";
                         var tokenSource = new CancellationTokenSource();
                         Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
                         {
@@ -492,46 +513,56 @@ namespace FDPhoneRecognition
                         current_task = new Dictionary<string, object>();
                         current_task.Add("CancellationTokenSource", tokenSource);
                         current_task.Add("task", t);
-                        current_task.Add("id", id);
+                        current_task.Add("id", "ISP");
                         current_task.Add("starttime", DateTime.Now);
                     }
                     else if (string.Compare(cmds[0], "QueryPMP", true) == 0)
                     {
-                        // wait for QueryPMP.
-                        // return only when 1) QueryPMP return, or 2) abort called
-                        id = "PMP";
-                        var tokenSource = new CancellationTokenSource();
-                        Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
-                        {
-                            Dictionary<string, object> ret = new Dictionary<string, object>();
-                            CancellationToken ct = (CancellationToken)o;
-                            while (true)
-                            {
-                                System.Threading.Thread.Sleep(1000);
-                                if (ct.IsCancellationRequested)
-                                {
-                                    Program.logIt($"handle_command: QueryISP cancelled.");
-                                    break;
-                                }
-                            }
-                            return ret;
-                        }, tokenSource.Token);
-                        error = 0;
-                        current_task = new Dictionary<string, object>();
-                        current_task.Add("CancellationTokenSource", tokenSource);
-                        current_task.Add("task", t);
-                        current_task.Add("id", id);
-                        current_task.Add("starttime", DateTime.Now);
                     }
                     else if (string.Compare(cmds[0], "MMI", true) == 0)
                     {
-
+                        // wait for MMI and QueryPMP.
+                        // return only when 1) QueryPMP return, or 2) abort called
+                        string fn = string.Empty;
+                        try
+                        {
+                            fn = cmds[1];
+                            using (System.IO.MemoryMappedFiles.MemoryMappedFile mmf = System.IO.MemoryMappedFiles.MemoryMappedFile.OpenExisting(fn))
+                            {
+                                response = $"ACK MMI {fn}{System.Environment.NewLine}";
+                            }
+                            var tokenSource = new CancellationTokenSource();
+                            Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
+                            {
+                                Dictionary<string, object> ret = new Dictionary<string, object>();
+                                CancellationToken ct = (CancellationToken)o;
+                                while (true)
+                                {
+                                    System.Threading.Thread.Sleep(1000);
+                                    if (ct.IsCancellationRequested)
+                                    {
+                                        Program.logIt($"handle_command: QueryISP cancelled.");
+                                        break;
+                                    }
+                                }
+                                return ret;
+                            }, tokenSource.Token);
+                            error = 4;
+                            current_task = new Dictionary<string, object>();
+                            current_task.Add("CancellationTokenSource", tokenSource);
+                            current_task.Add("task", t);
+                            current_task.Add("id", "PMP");
+                            current_task.Add("starttime", DateTime.Now);
+                        }
+                        catch (Exception)
+                        {
+                            response = $"ERR MMI {fn} open fail{System.Environment.NewLine}";
+                        }
                     }
                     else if (string.Compare(cmds[0], "QueryLoad", true) == 0)
                     {
                         // wait for user load the device.
                         // return only when 1) device loaded, or 2) abort called
-                        id = "Load";
                         var tokenSource = new CancellationTokenSource();
                         Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
                         {
@@ -552,14 +583,13 @@ namespace FDPhoneRecognition
                         current_task = new Dictionary<string, object>();
                         current_task.Add("CancellationTokenSource", tokenSource);
                         current_task.Add("task", t);
-                        current_task.Add("id", id);
+                        current_task.Add("id", "Load");
                         current_task.Add("starttime", DateTime.Now);
                     }
                     else if (string.Compare(cmds[0], "QueryUnload", true) == 0)
                     {
                         // wait for user unload the device.
                         // return only when 1) device loaded, or 2) abort called
-                        id = "Unload";
                         var tokenSource = new CancellationTokenSource();
                         Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
                         {
@@ -580,17 +610,17 @@ namespace FDPhoneRecognition
                         current_task = new Dictionary<string, object>();
                         current_task.Add("CancellationTokenSource", tokenSource);
                         current_task.Add("task", t);
-                        current_task.Add("id", id);
+                        current_task.Add("id", "Unload");
                         current_task.Add("starttime", DateTime.Now);
                     }
                     else
                     {
-
+                        // un-supported command.
                     }
                 }
             }
             Program.logIt($"handle_command: -- ret={error}");
-            return new Tuple<int, string>(error,id);
+            return new Tuple<int, string>(error,response);
         }
         #endregion
     }
