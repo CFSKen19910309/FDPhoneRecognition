@@ -34,3 +34,4 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("2019.07.15.2")]
 //[assembly: AssemblyFileVersion("0.0.0.0")]
+[assembly: log4net.Config.XmlConfigurator(ConfigFile = @".\FDData\FDPhoneRecognition\SystemFile\Log4Net.config")]

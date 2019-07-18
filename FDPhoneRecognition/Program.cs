@@ -13,6 +13,7 @@ namespace FDPhoneRecognition
 {
     class Program
     {
+        private static readonly log4net.ILog m_Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public static string t_EventName = "FDPhoneRecognitionEvent";
         public static string t_StopEventName = "FDPhoneRecognitionServerEvent";
         public static void logIt(String msg)
@@ -21,16 +22,27 @@ namespace FDPhoneRecognition
         }
         static void Main(string[] args)
         {
+            string t_ArgsString = string.Empty;
+            foreach (string t_Args in args)
+            {
+                t_ArgsString += t_Args + " ";
+                
+            }
+            m_Log.Info($"[Main] ++: args = {t_ArgsString}");
             System.Configuration.Install.InstallContext t_args = new System.Configuration.Install.InstallContext(null, args);
             if (t_args.IsParameterTrue("debug"))
             {
-                System.Console.WriteLine("Wait for debug, press any key to continue...");
+                m_Log.Debug($"[Main][Debug] ++");
+                m_Log.Info("[Main][Debug]: Wait for debug, press any key to continue...");
                 System.Console.ReadKey();
+                m_Log.Debug($"[Main][Debug] --");
             }
             if (t_args.IsParameterTrue("Start-TCPServer"))
             {
+                m_Log.Debug($"[Main][Start-TCPServer] ++");
                 bool own;
                 System.Threading.EventWaitHandle e = new System.Threading.EventWaitHandle(false, System.Threading.EventResetMode.ManualReset, t_StopEventName, out own);
+                m_Log.Debug($"[Main][Start-TCPServer]: EventName = {t_StopEventName}; IsNewCreated = {own.ToString()}");
                 if (own)
                 {
                     //Task t = Task.Run(() => TCPServer.start(e));
@@ -40,15 +52,18 @@ namespace FDPhoneRecognition
                 {
                     // server already running. just quit
                 }
+                m_Log.Debug($"[Main][Start-TCPServer] --");
             }
             else if (t_args.IsParameterTrue("Kill-TCPServer"))
             {
+                m_Log.Debug($"[Main][Kill-TCPServer] ++");
                 try
                 {
                     System.Threading.EventWaitHandle t_TCPQuit = System.Threading.EventWaitHandle.OpenExisting(t_StopEventName);
                     t_TCPQuit.Set();
                 }
                 catch (Exception) { }
+                m_Log.Debug($"[Main][Kill-TCPServer] --");
             }
             else
             {
@@ -58,6 +73,8 @@ namespace FDPhoneRecognition
                 int i = (int)dic["one"];
                 int j = (int)dic?["zero"];
             }
+            m_Log.Info($"[Main] --");
+
         }
         static void Main_1(string[] args)
         {

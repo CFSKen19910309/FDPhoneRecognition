@@ -36,6 +36,7 @@ namespace FDPhoneRecognition
     /// </summary>
     class TCPServer
     {
+        private static readonly log4net.ILog m_Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         /// <summary>
         /// The ip of server
         /// </summary>
@@ -299,7 +300,7 @@ namespace FDPhoneRecognition
         #region static functions
         public static void start(System.Threading.EventWaitHandle quitEvent, System.Collections.Specialized.StringDictionary args)
         {
-            Program.logIt("TCPServer::start: ++");
+            m_Log.Info($"[start] ++");
             int t_Port = 6280;
             if (args.ContainsKey("port"))
             {
@@ -308,6 +309,7 @@ namespace FDPhoneRecognition
                     t_Port = 6280;
                 }
             }
+            m_Log.Info($"[start]: Port = {t_Port}");
             try
             {
                 TcpListener server = new TcpListener(IPAddress.Loopback, t_Port);
