@@ -350,17 +350,27 @@ namespace FDPhoneRecognition
             Dictionary<string, object> current_task = null;
             try
             {
-                while (client.Connected)
+                bool done = false;
+                while (!done)
                 {
-                    if(client.Connected && client.Available>0)
+                    if (client.Poll(1000, SelectMode.SelectRead))
                     {
-                        byte[] buf = new byte[client.Available];
-                        int r = client.Receive(buf);
-                        ms.Write(buf, 0, r);
+                        if (client.Available > 0)
+                        {
+                            byte[] buf = new byte[client.Available];
+                            int r = client.Receive(buf);
+                            ms.Write(buf, 0, r);
+                        }
+                        else
+                        {
+                            client.Shutdown(SocketShutdown.Both);
+                            client.Close();
+                            done = true;
+                        }
                     }
                     // check if incoming data complete, 
                     // Command is terminated by LF (line feed) (0x0a)
-                    if (ms.Length > 0)
+                    if (!done && ms.Length > 0)
                     {
                         byte[] data = ms.ToArray();
                         if (data.Last() == 0x0a)
@@ -395,7 +405,7 @@ namespace FDPhoneRecognition
                             }
                         }
                     }
-                    if (current_task != null)
+                    if (!done && current_task != null)
                     {
                         object o;
                         if(current_task.TryGetValue("task", out o))
@@ -418,7 +428,7 @@ namespace FDPhoneRecognition
                             }
                         }
                     }
-                    System.Threading.Thread.Sleep(1000);
+                    //System.Threading.Thread.Sleep(1000);
                 }
             }
             catch (Exception) { }
