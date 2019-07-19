@@ -444,10 +444,20 @@ namespace FDPhoneRecognition
             string response = string.Empty;
             if (args.TryGetValue("id", out o))
                 tid = o as string;
+            Task<Dictionary<string, object>> t = (Task<Dictionary<string, object>>)args["task"];
             if (string.Compare(tid, "Load", true) == 0)
             {
                 // prepare response for command QueryLoad
             }
+            else if (string.Compare(tid, "ISP", true) == 0)
+            {
+                // prepare response for command QueryLoad
+                Dictionary<string, object> res = t.Result;
+                string s = "FlowContorl2-4-8-2";
+                response = $"ACK {tid} {s}\n";
+                ret = true;
+            }
+
             return new Tuple<bool, string>(ret, response);
         }
         static Tuple<int,string> handle_command(string[] cmds, ref Dictionary<string,object> current_task)
@@ -510,6 +520,7 @@ namespace FDPhoneRecognition
                         {
                             Dictionary<string, object> ret = new Dictionary<string, object>();
                             CancellationToken ct = (CancellationToken)o;
+                            DateTime _start = DateTime.Now;
                             while (true)
                             {
                                 System.Threading.Thread.Sleep(1000);
@@ -518,7 +529,12 @@ namespace FDPhoneRecognition
                                     Program.logIt($"handle_command: QueryISP cancelled.");
                                     break;
                                 }
+                                if((DateTime.Now-_start).TotalSeconds>5)
+                                {
+                                    break;
+                                }
                             }
+                            ret.Add("model", "iphoneXR blue_M2_N");
                             return ret;
                         }, tokenSource.Token);
                         error = 0;
