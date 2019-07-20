@@ -76,8 +76,8 @@ namespace FDPhoneRecognition
             }
             else
             {
-                IniFile ini = new IniFile(Program.getAviaDeviceFilename());
-                ini.DeleteSection("device");
+                ShareMemory t_SharedMemory = new ShareMemory("BACK", string.Empty);
+                t_SharedMemory.SyncGetMemory();
             }
             m_Log.Info($"[Main] --");
 

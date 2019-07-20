@@ -512,6 +512,22 @@ namespace FDPhoneRecognition
                     ret = true;
                 }
             }
+            else if (string.Compare(tid, "PMP", true) == 0 && task != null)
+            {
+                Dictionary<string, object> res = task.Result;
+                if (res.ContainsKey("errorcode") && res.ContainsKey("model"))
+                {
+                    if ((int)res["errorcode"] == 0)
+                    {
+                        response = $"ACK {tid} {res["model"]}\n";
+                    }
+                    else
+                    {
+                        response = $"ERR {tid} {res["errorcode"]}\n";
+                    }
+                    ret = true;
+                }
+            }
             Program.logIt($"handle_command_complete: -- {ret} response={response}");
             return new Tuple<bool, string>(ret, response);
         }
@@ -544,19 +560,19 @@ namespace FDPhoneRecognition
                     catch (Exception) { }
                 }
             }
-            else if (string.Compare(cmds[0], "QueryPMP", true) == 0)
-            {
-                if (current_task == null)
-                {
-                    Program.logIt($"handle_command: not received MMI command");
-                    response = $"ERR PMP no memory map image\n";
-                    error = 5;
-                }
-                else
-                {
-                    // continue wait.
-                }
-            }
+            //else if (string.Compare(cmds[0], "QueryPMP", true) == 0)
+            //{
+            //    if (current_task == null)
+            //    {
+            //        Program.logIt($"handle_command: not received MMI command");
+            //        response = $"ERR PMP no memory map image\n";
+            //        error = 5;
+            //    }
+            //    else
+            //    {
+            //        // continue wait.
+            //    }
+            //}
             else
             {
                 if (current_task != null)
@@ -665,6 +681,37 @@ namespace FDPhoneRecognition
                     }
                     else if (string.Compare(cmds[0], "QueryPMP", true) == 0)
                     {
+                        var tokenSource = new CancellationTokenSource();
+                        Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
+                        {
+                            Dictionary<string, object> ret = new Dictionary<string, object>();
+                            CancellationToken ct = (CancellationToken)o;
+                            IniFile ini = new IniFile(Program.getAviaDeviceFilename());
+                            while (true)
+                            {
+                                System.Threading.Thread.Sleep(1000);
+                                if (ct.IsCancellationRequested)
+                                {
+                                    Program.logIt($"handle_command: QueryPMP cancelled.");
+                                    break;
+                                }
+                                string s = ini.GetString("device", "ready", "");
+                                string model = ini.GetString("device", "model", "");
+                                if (string.Compare(s, Boolean.TrueString, true) == 0 && !string.IsNullOrEmpty(model))
+                                {
+                                    ret.Add("errorcode", 0);
+                                    ret.Add("model", model);
+                                    break;
+                                }
+                            }
+                            return ret;
+                        }, tokenSource.Token);
+                        error = 0;
+                        current_task = new Dictionary<string, object>();
+                        current_task.Add("CancellationTokenSource", tokenSource);
+                        current_task.Add("task", t);
+                        current_task.Add("id", "PMP");
+                        current_task.Add("starttime", DateTime.Now);
                     }
                     else if (string.Compare(cmds[0], "MMI", true) == 0)
                     {
