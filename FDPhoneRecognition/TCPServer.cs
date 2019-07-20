@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -409,12 +411,14 @@ namespace FDPhoneRecognition
                     }
                     if (!done && current_task != null)
                     {
+                        bool task_done = false;
                         object o;
                         if(current_task.TryGetValue("task", out o))
                         {
                             Task<Dictionary<string, object>> t = (Task<Dictionary<string, object>>)o;
                             if (t.IsCompleted)
                             {
+                                task_done = true;
                                 // completed, get result
                                 Tuple<bool, string> res = handle_command_complete(current_task);
                                 if(res.Item1)
@@ -422,13 +426,17 @@ namespace FDPhoneRecognition
                             }
                             else if (t.IsCanceled)
                             {
+                                task_done = true;
                                 // cancelled
                             }
                             else if (t.IsFaulted)
                             {
+                                task_done = true;
                                 // unhandled exception
                             }
                         }
+                        if (task_done)
+                            current_task = null;
                     }
                     //System.Threading.Thread.Sleep(1000);
                 }
@@ -444,18 +452,22 @@ namespace FDPhoneRecognition
             string response = string.Empty;
             if (args.TryGetValue("id", out o))
                 tid = o as string;
-            Task<Dictionary<string, object>> t = (Task<Dictionary<string, object>>)args["task"];
+            Task<Dictionary<string, object>> task = null;
+            if (args.TryGetValue("task", out o))
+                task = (Task<Dictionary<string, object>>)o;
             if (string.Compare(tid, "Load", true) == 0)
             {
                 // prepare response for command QueryLoad
             }
-            else if (string.Compare(tid, "ISP", true) == 0)
+            else if (string.Compare(tid, "ISP", true) == 0 && task!=null)
             {
                 // prepare response for command QueryLoad
-                Dictionary<string, object> res = t.Result;
-                string s = "FlowContorl2-4-8-2";
-                response = $"ACK {tid} {s}\n";
-                ret = true;
+                Dictionary<string, object> res = task.Result;
+                if (res.TryGetValue("script", out o))
+                {
+                    response = $"ACK {tid} {o.ToString()}\n";
+                    ret = true;
+                }
             }
 
             return new Tuple<bool, string>(ret, response);
@@ -520,21 +532,55 @@ namespace FDPhoneRecognition
                         {
                             Dictionary<string, object> ret = new Dictionary<string, object>();
                             CancellationToken ct = (CancellationToken)o;
-                            DateTime _start = DateTime.Now;
-                            while (true)
+                            List<string> lines = new List<string>();
+                            int exit_code = -1;
+                            string fn = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaGetPhoneSize.exe");
+                            if (System.IO.File.Exists(fn))
                             {
-                                System.Threading.Thread.Sleep(1000);
-                                if (ct.IsCancellationRequested)
+                                try
                                 {
-                                    Program.logIt($"handle_command: QueryISP cancelled.");
-                                    break;
+                                    Process p = new Process();
+                                    p.StartInfo.FileName = fn;
+                                    p.StartInfo.Arguments = "-QueryISP";
+                                    p.StartInfo.UseShellExecute = false;
+                                    p.StartInfo.CreateNoWindow = true;
+                                    p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                                    p.OutputDataReceived += (s, e) =>
+                                    {
+                                        if (e.Data != null)
+                                        {
+                                            Program.logIt($"[{System.IO.Path.GetFileName(fn)}]: {e.Data}");
+                                            lines.Add(e.Data);
+                                        }
+                                    };
+                                    p.StartInfo.RedirectStandardOutput = true;
+                                    p.Start();
+                                    p.BeginOutputReadLine();
+                                    while (!p.WaitForExit(1000))
+                                    {
+                                        if (ct.IsCancellationRequested)
+                                        {
+                                            Program.logIt($"handle_command: QueryISP cancelled.");
+                                            break;
+                                        }
+                                    }
+                                    if (!p.HasExited)
+                                    {
+                                        p.Kill();
+                                    }
+                                    else
+                                    {
+                                        exit_code = p.ExitCode;
+                                        if (exit_code == 0)
+                                        {
+                                            ret = new Dictionary<string, object>(parseKeyValuePair(lines.ToArray()));
+                                            ret["script"] = mapSizeColorToScript(ret);
+                                        }
+                                    }
                                 }
-                                if((DateTime.Now-_start).TotalSeconds>5)
-                                {
-                                    break;
-                                }
+                                catch (Exception) { }
                             }
-                            ret.Add("model", "iphoneXR blue_M2_N");
+                            ret["errorcode"] = exit_code;
                             return ret;
                         }, tokenSource.Token);
                         error = 0;
@@ -649,6 +695,53 @@ namespace FDPhoneRecognition
             }
             Program.logIt($"handle_command: -- ret={error}");
             return new Tuple<int, string>(error,response);
+        }
+        static Dictionary<string, object> parseKeyValuePair(string[] lines)
+        {
+            Dictionary<string, object> ret = new Dictionary<string, object>();
+            foreach(string line in lines)
+            {
+                int pos = line.IndexOf('=');
+                if(pos>0 && pos < line.Length - 1)
+                {
+                    string k = line.Substring(0, pos);
+                    string v = line.Substring(pos + 1);
+                    ret[k] = v;
+                }
+            }
+            return ret;
+        }
+        static string mapSizeColorToScript(Dictionary<string,object> args)
+        {
+            string ret = "Flow8Plussilver";
+            Program.logIt("mapSizeColorToScript: ++");
+            try
+            {
+                if (args.ContainsKey("colorid") && args.ContainsKey("sizeid"))
+                {
+                    string fn = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "FDPhoneRecognition.json");
+                    if (System.IO.File.Exists(fn))
+                    {
+                        var jss = new System.Web.Script.Serialization.JavaScriptSerializer();
+                        Dictionary<string, Object> dict = jss.Deserialize<Dictionary<string, object>>(System.IO.File.ReadAllText(fn));
+                        if (dict.ContainsKey("ISP"))
+                        {
+                            Dictionary<string, Object> isp = (Dictionary<string, Object>)dict["ISP"];
+                            if (isp.ContainsKey($"{args["sizeid"].ToString()}-{args["colorid"].ToString()}"))
+                            {
+                                ret = isp[$"{args["sizeid"].ToString()}-{args["colorid"].ToString()}"].ToString();
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Program.logIt($"mapSizeColorToScript: exception: {ex.Message}");
+                Program.logIt($"mapSizeColorToScript: exception: {ex.StackTrace}");
+            }
+            Program.logIt($"mapSizeColorToScript: -- ret={ret}");
+            return ret;
         }
         #endregion
     }

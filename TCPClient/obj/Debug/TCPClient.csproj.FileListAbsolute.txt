@@ -19,3 +19,6 @@ D:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.csprojAssembly
 D:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.csproj.CoreCompileInputs.cache
 D:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.exe
 D:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.pdb
+D:\projects\avia\FDPhoneRecognition\TCPClient\bin\Debug\log4net.dll
+D:\projects\avia\FDPhoneRecognition\TCPClient\bin\Debug\log4net.xml
+D:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.csproj.CopyComplete

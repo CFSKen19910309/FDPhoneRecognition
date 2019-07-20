@@ -20,6 +20,10 @@ namespace FDPhoneRecognition
         {
             System.Diagnostics.Trace.WriteLine(msg);
         }
+        public static string getFilename()
+        {
+            return System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+        }
         static void Main(string[] args)
         {
             string t_ArgsString = string.Empty;
@@ -67,11 +71,7 @@ namespace FDPhoneRecognition
             }
             else
             {
-                Dictionary<string, object> dic = new Dictionary<string, object>();
-                dic.Add("one", 1);
-                dic.Add("two", 2);
-                int i = (int)dic["one"];
-                int j = (int)dic?["zero"];
+                getFilename();
             }
             m_Log.Info($"[Main] --");
 
