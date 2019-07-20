@@ -74,6 +74,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IniFile.cs" />
     <Compile Include="LogIt.cs" />
     <Compile Include="ModelMapping.cs" />
     <Compile Include="Program.cs" />
@@ -87,6 +88,7 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="doc\FDI Phone Recognition System Communication Protocol 1.1.pdf" />
+    <None Include="FDData\AviaDevice.ini" />
     <None Include="FDData\FDPhoneRecognition.json" />
     <None Include="FDData\FDPhoneRecognition\SystemFile\ModelMappingPMP.json" />
     <None Include="packages.config" />

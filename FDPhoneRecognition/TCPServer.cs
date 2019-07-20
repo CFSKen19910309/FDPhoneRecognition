@@ -9,6 +9,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using utility;
 
 namespace FDPhoneRecognition
 {
@@ -421,7 +422,7 @@ namespace FDPhoneRecognition
                                 task_done = true;
                                 // completed, get result
                                 Tuple<bool, string> res = handle_command_complete(current_task);
-                                if(res.Item1)
+                                if(res.Item1 && !string.IsNullOrEmpty(res.Item2))
                                     client.Send(System.Text.Encoding.UTF8.GetBytes(res.Item2));
                             }
                             else if (t.IsCanceled)
@@ -450,26 +451,68 @@ namespace FDPhoneRecognition
             string tid=string.Empty;
             bool ret = false;
             string response = string.Empty;
+            Program.logIt("handle_command_complete: ++");
             if (args.TryGetValue("id", out o))
                 tid = o as string;
             Task<Dictionary<string, object>> task = null;
             if (args.TryGetValue("task", out o))
                 task = (Task<Dictionary<string, object>>)o;
-            if (string.Compare(tid, "Load", true) == 0)
-            {
-                // prepare response for command QueryLoad
-            }
-            else if (string.Compare(tid, "ISP", true) == 0 && task!=null)
+            if (string.Compare(tid, "ISP", true) == 0 && task!=null)
             {
                 // prepare response for command QueryLoad
                 Dictionary<string, object> res = task.Result;
-                if (res.TryGetValue("script", out o))
+                if (res.ContainsKey("errorcode") && res.ContainsKey("script"))
                 {
-                    response = $"ACK {tid} {o.ToString()}\n";
+                    if ((int)res["errorcode"] == 0)
+                    {
+                        response = $"ACK {tid} {res["script"].ToString()}\n";
+                    }
+                    else
+                    {
+                        response = $"ERR {tid} {res["errorcode"]}\n";
+                    }
                     ret = true;
                 }
             }
-
+            else if (string.Compare(tid, "Load", true) == 0 && task != null)
+            {
+                Dictionary<string, object> res = task.Result;
+                if(res.ContainsKey("errorcode") && res.ContainsKey("arrival"))
+                {
+                    if ((int)res["errorcode"] == 0)
+                    {
+                        if((bool)res["arrival"])
+                        {
+                            response = $"ACK {tid}\n";
+                        }
+                    }
+                    else
+                    {
+                        response = $"ERR {tid} {res["errorcode"]}\n";
+                    }
+                    ret = true;
+                }
+            }
+            else if (string.Compare(tid, "Unload", true) == 0 && task != null)
+            {
+                Dictionary<string, object> res = task.Result;
+                if (res.ContainsKey("errorcode") && res.ContainsKey("removal"))
+                {
+                    if ((int)res["errorcode"] == 0)
+                    {
+                        if ((bool)res["removal"])
+                        {
+                            response = $"ACK {tid}\n";
+                        }
+                    }
+                    else
+                    {
+                        response = $"ERR {tid} {res["errorcode"]}\n";
+                    }
+                    ret = true;
+                }
+            }
+            Program.logIt($"handle_command_complete: -- {ret} response={response}");
             return new Tuple<bool, string>(ret, response);
         }
         static Tuple<int,string> handle_command(string[] cmds, ref Dictionary<string,object> current_task)
@@ -532,6 +575,35 @@ namespace FDPhoneRecognition
                         {
                             Dictionary<string, object> ret = new Dictionary<string, object>();
                             CancellationToken ct = (CancellationToken)o;
+                            IniFile ini = new IniFile(Program.getAviaDeviceFilename());
+                            while (true)
+                            {
+                                System.Threading.Thread.Sleep(1000);
+                                if (ct.IsCancellationRequested)
+                                {
+                                    Program.logIt($"handle_command: QueryLoad cancelled.");
+                                    break;
+                                }
+                                string s = ini.GetString("device", "ready", "");
+                                if (string.Compare(s, Boolean.TrueString, true) == 0)
+                                {
+                                    ret.Add("errorcode", 0);
+                                    string sid = ini.GetString("device", "sizeid", "");
+                                    string cid = ini.GetString("device", "colorid", "");
+                                    //ret.Add("sizeid", ini.GetString("device", "sizeid", ""));
+                                    //ret.Add("colorid", ini.GetString("device", "colorid", ""));
+                                    //ret["script"] = mapSizeColorToScript(ret);
+                                    ret["script"] = mapSizeColorToScript(sid,cid);
+                                    break;
+                                }
+                            }
+                            return ret;
+                        }, tokenSource.Token);
+                        /*
+                        Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
+                        {
+                            Dictionary<string, object> ret = new Dictionary<string, object>();
+                            CancellationToken ct = (CancellationToken)o;
                             List<string> lines = new List<string>();
                             int exit_code = -1;
                             string fn = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaGetPhoneSize.exe");
@@ -583,6 +655,7 @@ namespace FDPhoneRecognition
                             ret["errorcode"] = exit_code;
                             return ret;
                         }, tokenSource.Token);
+                        */
                         error = 0;
                         current_task = new Dictionary<string, object>();
                         current_task.Add("CancellationTokenSource", tokenSource);
@@ -642,12 +715,20 @@ namespace FDPhoneRecognition
                         {
                             Dictionary<string, object> ret = new Dictionary<string, object>();
                             CancellationToken ct = (CancellationToken)o;
+                            IniFile ini = new IniFile(Program.getAviaDeviceFilename());
                             while (true)
                             {
                                 System.Threading.Thread.Sleep(1000);
                                 if (ct.IsCancellationRequested)
                                 {
                                     Program.logIt($"handle_command: QueryLoad cancelled.");
+                                    break;
+                                }
+                                string s = ini.GetString("device", "ready", "");
+                                if (string.Compare(s, Boolean.TrueString, true) == 0)
+                                {
+                                    ret.Add("errorcode", 0);
+                                    ret.Add("arrival", true);
                                     break;
                                 }
                             }
@@ -669,12 +750,20 @@ namespace FDPhoneRecognition
                         {
                             Dictionary<string, object> ret = new Dictionary<string, object>();
                             CancellationToken ct = (CancellationToken)o;
+                            IniFile ini = new IniFile(Program.getAviaDeviceFilename());
                             while (true)
                             {
                                 System.Threading.Thread.Sleep(1000);
                                 if (ct.IsCancellationRequested)
                                 {
-                                    Program.logIt($"handle_command: QueryUnload cancelled.");
+                                    Program.logIt($"handle_command: QueryLoad cancelled.");
+                                    break;
+                                }
+                                string s = ini.GetString("device", "ready", "");
+                                if (string.Compare(s, Boolean.FalseString, true) == 0)
+                                {
+                                    ret.Add("errorcode", 0);
+                                    ret.Add("removal", true);
                                     break;
                                 }
                             }
@@ -741,6 +830,18 @@ namespace FDPhoneRecognition
                 Program.logIt($"mapSizeColorToScript: exception: {ex.StackTrace}");
             }
             Program.logIt($"mapSizeColorToScript: -- ret={ret}");
+            return ret;
+        }
+        static string mapSizeColorToScript(string sizeID, string colorID)
+        {
+            string ret = "Flow8Plusred";
+            try
+            {
+                IniFile ini = new IniFile(Program.getAviaDeviceFilename());
+                string s = ini.GetString("script", "default", "Flow8Plusred");
+                ret = ini.GetString("script", $"{sizeID}-{colorID}", s);
+            }
+            catch (Exception) { }
             return ret;
         }
         #endregion

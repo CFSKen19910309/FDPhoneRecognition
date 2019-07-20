@@ -8,6 +8,7 @@ using System.ServiceModel;
 using System.ServiceModel.Web;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using utility;
 
 namespace FDPhoneRecognition
 {
@@ -23,6 +24,10 @@ namespace FDPhoneRecognition
         public static string getFilename()
         {
             return System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+        }
+        public static string getAviaDeviceFilename()
+        {
+            return System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaDevice.ini");
         }
         static void Main(string[] args)
         {
@@ -71,7 +76,8 @@ namespace FDPhoneRecognition
             }
             else
             {
-                getFilename();
+                IniFile ini = new IniFile(Program.getAviaDeviceFilename());
+                ini.DeleteSection("device");
             }
             m_Log.Info($"[Main] --");
 
