@@ -76,7 +76,7 @@ namespace FDPhoneRecognition
             }
             else
             {
-                ShareMemory t_SharedMemory = new ShareMemory("BACK", string.Empty);
+                ShareMemory t_SharedMemory = new ShareMemory("Back", string.Empty);
                 t_SharedMemory.SyncGetMemory();
             }
             m_Log.Info($"[Main] --");
