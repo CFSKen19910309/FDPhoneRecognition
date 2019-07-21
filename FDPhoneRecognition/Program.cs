@@ -9,6 +9,7 @@ using System.ServiceModel.Web;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using utility;
+using System.Diagnostics;
 
 namespace FDPhoneRecognition
 {
@@ -28,6 +29,21 @@ namespace FDPhoneRecognition
         public static string getAviaDeviceFilename()
         {
             return System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaDevice.ini");
+        }
+        public static bool invokeUtility(string fn, string args)
+        {
+            bool ret = false;
+            if (System.IO.File.Exists(fn))
+            {
+                Process p = new Process();
+                p.StartInfo.FileName = fn;
+                p.StartInfo.Arguments = args;
+                p.StartInfo.CreateNoWindow = true;
+                p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                p.Start();
+                ret = true;
+            }
+            return ret;
         }
         static void Main(string[] args)
         {
@@ -74,9 +90,18 @@ namespace FDPhoneRecognition
                 catch (Exception) { }
                 m_Log.Debug($"[Main][Kill-TCPServer] --");
             }
+            else if(t_args.Parameters.ContainsKey("mmi"))
+            {
+                string target = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", $"{t_args.Parameters["mmi"]}.bmp");
+                if (t_args.Parameters.ContainsKey("output"))
+                    target = t_args.Parameters["output"];
+                ShareMemory t_SharedMemory = new ShareMemory(t_args.Parameters["mmi"], target);
+                //t_SharedMemory.SyncGetMemory();
+                t_SharedMemory.GetShareMemory();
+            }
             else
             {
-                ShareMemory t_SharedMemory = new ShareMemory("Back", string.Empty);
+                ShareMemory t_SharedMemory = new ShareMemory("BACK", string.Empty);
                 t_SharedMemory.SyncGetMemory();
             }
             m_Log.Info($"[Main] --");

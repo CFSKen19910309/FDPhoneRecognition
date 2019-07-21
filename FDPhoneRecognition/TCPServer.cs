@@ -528,6 +528,22 @@ namespace FDPhoneRecognition
                     ret = true;
                 }
             }
+            else if (string.Compare(tid, "MMI", true) == 0 && task != null)
+            {
+                Dictionary<string, object> res = task.Result;
+                if (res.ContainsKey("errorcode") && res.ContainsKey("filename"))
+                {
+                    if ((int)res["errorcode"] == 0)
+                    {
+                        response = $"ACK {tid} {res["filename"]}\n";
+                    }
+                    else
+                        response = $"ERR {tid} {res["errorcode"]}\n";
+                    ret = true;
+                }
+
+            }
+
             Program.logIt($"handle_command_complete: -- {ret} response={response}");
             return new Tuple<bool, string>(ret, response);
         }
@@ -592,6 +608,7 @@ namespace FDPhoneRecognition
                             Dictionary<string, object> ret = new Dictionary<string, object>();
                             CancellationToken ct = (CancellationToken)o;
                             IniFile ini = new IniFile(Program.getAviaDeviceFilename());
+                            ini.WriteValue("query", "command", "ISP");
                             while (true)
                             {
                                 System.Threading.Thread.Sleep(1000);
@@ -615,63 +632,6 @@ namespace FDPhoneRecognition
                             }
                             return ret;
                         }, tokenSource.Token);
-                        /*
-                        Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
-                        {
-                            Dictionary<string, object> ret = new Dictionary<string, object>();
-                            CancellationToken ct = (CancellationToken)o;
-                            List<string> lines = new List<string>();
-                            int exit_code = -1;
-                            string fn = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaGetPhoneSize.exe");
-                            if (System.IO.File.Exists(fn))
-                            {
-                                try
-                                {
-                                    Process p = new Process();
-                                    p.StartInfo.FileName = fn;
-                                    p.StartInfo.Arguments = "-QueryISP";
-                                    p.StartInfo.UseShellExecute = false;
-                                    p.StartInfo.CreateNoWindow = true;
-                                    p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                                    p.OutputDataReceived += (s, e) =>
-                                    {
-                                        if (e.Data != null)
-                                        {
-                                            Program.logIt($"[{System.IO.Path.GetFileName(fn)}]: {e.Data}");
-                                            lines.Add(e.Data);
-                                        }
-                                    };
-                                    p.StartInfo.RedirectStandardOutput = true;
-                                    p.Start();
-                                    p.BeginOutputReadLine();
-                                    while (!p.WaitForExit(1000))
-                                    {
-                                        if (ct.IsCancellationRequested)
-                                        {
-                                            Program.logIt($"handle_command: QueryISP cancelled.");
-                                            break;
-                                        }
-                                    }
-                                    if (!p.HasExited)
-                                    {
-                                        p.Kill();
-                                    }
-                                    else
-                                    {
-                                        exit_code = p.ExitCode;
-                                        if (exit_code == 0)
-                                        {
-                                            ret = new Dictionary<string, object>(parseKeyValuePair(lines.ToArray()));
-                                            ret["script"] = mapSizeColorToScript(ret);
-                                        }
-                                    }
-                                }
-                                catch (Exception) { }
-                            }
-                            ret["errorcode"] = exit_code;
-                            return ret;
-                        }, tokenSource.Token);
-                        */
                         error = 0;
                         current_task = new Dictionary<string, object>();
                         current_task.Add("CancellationTokenSource", tokenSource);
@@ -687,6 +647,7 @@ namespace FDPhoneRecognition
                             Dictionary<string, object> ret = new Dictionary<string, object>();
                             CancellationToken ct = (CancellationToken)o;
                             IniFile ini = new IniFile(Program.getAviaDeviceFilename());
+                            ini.WriteValue("query", "command", "PMP");
                             while (true)
                             {
                                 System.Threading.Thread.Sleep(1000);
@@ -721,37 +682,38 @@ namespace FDPhoneRecognition
                         try
                         {
                             fn = cmds[1];
-                            using (System.IO.MemoryMappedFiles.MemoryMappedFile mmf = System.IO.MemoryMappedFiles.MemoryMappedFile.OpenExisting(fn))
-                            {
-                                response = $"ACK MMI {fn}\n";
-                            }
                             var tokenSource = new CancellationTokenSource();
                             Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
                             {
                                 Dictionary<string, object> ret = new Dictionary<string, object>();
-                                CancellationToken ct = (CancellationToken)o;
-                                while (true)
+                                Tuple<CancellationToken, string> args = (Tuple<CancellationToken, string>)o;
+                                CancellationToken ct = args.Item1;
+                                try
                                 {
-                                    System.Threading.Thread.Sleep(1000);
-                                    if (ct.IsCancellationRequested)
+                                    ret.Add("filename", args.Item2);
+                                    using (System.IO.MemoryMappedFiles.MemoryMappedFile mmf = System.IO.MemoryMappedFiles.MemoryMappedFile.OpenExisting(args.Item2))
                                     {
-                                        Program.logIt($"handle_command: QueryISP cancelled.");
-                                        break;
+                                        IniFile ini = new IniFile(Program.getAviaDeviceFilename());
+                                        ini.WriteValue("query", "command", "MMI");
+                                        ini.WriteValue("query", "filename", args.Item2);
+                                        ret.Add("errorcode", 0);
                                     }
                                 }
+                                catch (Exception)
+                                {
+                                    // fail to open mmf.
+                                    ret.Add("errorcode", 6);
+                                }
                                 return ret;
-                            }, tokenSource.Token);
-                            error = 4;
+                            }, new Tuple<CancellationToken, string>(tokenSource.Token, fn));
+                            error = 0;
                             current_task = new Dictionary<string, object>();
                             current_task.Add("CancellationTokenSource", tokenSource);
                             current_task.Add("task", t);
-                            current_task.Add("id", "PMP");
+                            current_task.Add("id", "MMI");
                             current_task.Add("starttime", DateTime.Now);
                         }
-                        catch (Exception)
-                        {
-                            response = $"ERR MMI {fn} open fail\n";
-                        }
+                        catch (Exception) { }
                     }
                     else if (string.Compare(cmds[0], "QueryLoad", true) == 0)
                     {
@@ -763,6 +725,7 @@ namespace FDPhoneRecognition
                             Dictionary<string, object> ret = new Dictionary<string, object>();
                             CancellationToken ct = (CancellationToken)o;
                             IniFile ini = new IniFile(Program.getAviaDeviceFilename());
+                            ini.WriteValue("query", "command", "Load");
                             while (true)
                             {
                                 System.Threading.Thread.Sleep(1000);
@@ -798,6 +761,7 @@ namespace FDPhoneRecognition
                             Dictionary<string, object> ret = new Dictionary<string, object>();
                             CancellationToken ct = (CancellationToken)o;
                             IniFile ini = new IniFile(Program.getAviaDeviceFilename());
+                            ini.WriteValue("query", "command", "Unload");
                             while (true)
                             {
                                 System.Threading.Thread.Sleep(1000);

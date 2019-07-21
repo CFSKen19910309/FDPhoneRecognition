@@ -6,3 +6,4 @@
 3, received "Abort", abort the current task 
 4, received "MMI", return the  "ACK MMI {station name}"
 5, received "QueryPMP", but not receive command "MMI"
+6, fail to open memory map file

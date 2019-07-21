@@ -21,7 +21,7 @@ namespace FDPhoneRecognition
             System.Threading.Thread t_Thread = new System.Threading.Thread(new System.Threading.ThreadStart(GetShareMemory));
             t_Thread.Start();
             //Call Back
-            //t_Thread.Join();
+            t_Thread.Join();
         }
         public void GetShareMemory()
         {
@@ -64,8 +64,8 @@ namespace FDPhoneRecognition
                     //Marshal.FreeHGlobal(t_DataIntPtr);
                     //t_BitmapData.Scan0 = t_DataIntPtr;
                     t_Bitmap.UnlockBits(t_BitmapData);
-                    t_Bitmap.Save($@"{System.Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\GetBitmap.bmp");
-                    //t_Bitmap.Save(m_targetFilename);
+                    //t_Bitmap.Save($@"{System.Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\GetBitmap.bmp");
+                    t_Bitmap.Save(m_targetFilename);
                 }
             }
             catch (System.IO.FileNotFoundException)
