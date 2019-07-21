@@ -15,7 +15,6 @@ C:\Users\qa\Source\Repos\CFSKen19910309\FDPhoneRecognition\TCPClient\obj\Debug\T
 D:\projects\avia\FDPhoneRecognition\TCPClient\bin\Debug\TCPClient.exe.config
 D:\projects\avia\FDPhoneRecognition\TCPClient\bin\Debug\TCPClient.exe
 D:\projects\avia\FDPhoneRecognition\TCPClient\bin\Debug\TCPClient.pdb
-D:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.csprojAssemblyReference.cache
 D:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.csproj.CoreCompileInputs.cache
 D:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.exe
 D:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.pdb

@@ -15,7 +15,6 @@ C:\Users\qa\Source\Repos\CFSKen19910309\FDPhoneRecognition\WriteToMemory\obj\Deb
 D:\projects\avia\FDPhoneRecognition\WriteToMemory\bin\Debug\WriteToMemory.exe.config
 D:\projects\avia\FDPhoneRecognition\WriteToMemory\bin\Debug\WriteToMemory.exe
 D:\projects\avia\FDPhoneRecognition\WriteToMemory\bin\Debug\WriteToMemory.pdb
-D:\projects\avia\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.csprojAssemblyReference.cache
 D:\projects\avia\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.csproj.CoreCompileInputs.cache
 D:\projects\avia\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.exe
 D:\projects\avia\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.pdb
