@@ -1028,7 +1028,15 @@ namespace FDPhoneRecognition
                     break;
                 }
             }
-            ret.Add("errorcode", p.ExitCode);
+            if (p.HasExited)
+            {
+                ret.Add("errorcode", p.ExitCode);
+            }
+            else
+            {
+                p.Kill();
+                ret.Add("errorcode", 1460);
+            }
             return ret;
         }
         #endregion
