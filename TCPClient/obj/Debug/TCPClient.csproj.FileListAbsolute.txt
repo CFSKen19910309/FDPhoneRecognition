@@ -31,3 +31,4 @@ C:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.csproj.CoreCom
 C:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.csproj.CopyComplete
 C:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.exe
 C:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.pdb
+D:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.csprojAssemblyReference.cache

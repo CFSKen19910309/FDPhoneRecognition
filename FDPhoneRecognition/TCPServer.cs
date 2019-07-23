@@ -617,8 +617,8 @@ namespace FDPhoneRecognition
                                     Program.logIt($"handle_command: QueryLoad cancelled.");
                                     break;
                                 }
-                                string s = ini.GetString("device", "ready", "");
-                                if (string.Compare(s, Boolean.TrueString, true) == 0)
+                                string s = ini.GetString("device", "device", "");
+                                if (string.Compare(s, "ready", true) == 0)
                                 {
                                     ret.Add("errorcode", 0);
                                     string sid = ini.GetString("device", "sizeid", "");
@@ -644,6 +644,9 @@ namespace FDPhoneRecognition
                         var tokenSource = new CancellationTokenSource();
                         Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
                         {
+                            CancellationToken ct = (CancellationToken)o;
+                            return handle_QueryPMP_command(ct);
+                            /*
                             Dictionary<string, object> ret = new Dictionary<string, object>();
                             CancellationToken ct = (CancellationToken)o;
                             IniFile ini = new IniFile(Program.getAviaDeviceFilename());
@@ -656,16 +659,16 @@ namespace FDPhoneRecognition
                                     Program.logIt($"handle_command: QueryPMP cancelled.");
                                     break;
                                 }
-                                string s = ini.GetString("device", "ready", "");
+                                string s = ini.GetString("device", "device", "");
                                 string model = ini.GetString("device", "model", "");
-                                if (string.Compare(s, Boolean.TrueString, true) == 0 && !string.IsNullOrEmpty(model))
+                                if (string.Compare(s, "ready", true) == 0 && !string.IsNullOrEmpty(model))
                                 {
                                     ret.Add("errorcode", 0);
                                     ret.Add("model", model);
                                     break;
                                 }
                             }
-                            return ret;
+                            return ret;*/
                         }, tokenSource.Token);
                         error = 0;
                         current_task = new Dictionary<string, object>();
@@ -722,6 +725,9 @@ namespace FDPhoneRecognition
                         var tokenSource = new CancellationTokenSource();
                         Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
                         {
+                            CancellationToken ct = (CancellationToken)o;
+                            return handle_QueryLoad_command(ct);
+                            /*
                             Dictionary<string, object> ret = new Dictionary<string, object>();
                             CancellationToken ct = (CancellationToken)o;
                             IniFile ini = new IniFile(Program.getAviaDeviceFilename());
@@ -743,6 +749,7 @@ namespace FDPhoneRecognition
                                 }
                             }
                             return ret;
+                            */
                         }, tokenSource.Token);
                         error = 0;
                         current_task = new Dictionary<string, object>();
@@ -758,6 +765,9 @@ namespace FDPhoneRecognition
                         var tokenSource = new CancellationTokenSource();
                         Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
                         {
+                            CancellationToken ct = (CancellationToken)o;
+                            return handle_QueryUnload_command(ct);
+                            /*
                             Dictionary<string, object> ret = new Dictionary<string, object>();
                             CancellationToken ct = (CancellationToken)o;
                             IniFile ini = new IniFile(Program.getAviaDeviceFilename());
@@ -779,6 +789,7 @@ namespace FDPhoneRecognition
                                 }
                             }
                             return ret;
+                            */
                         }, tokenSource.Token);
                         error = 0;
                         current_task = new Dictionary<string, object>();
@@ -853,6 +864,171 @@ namespace FDPhoneRecognition
                 ret = ini.GetString("script", $"{sizeID}-{colorID}", s);
             }
             catch (Exception) { }
+            return ret;
+        }
+        static Dictionary<string, object> handle_QueryUnload_command(CancellationToken ct)
+        {
+            Dictionary<string, object> ret = new Dictionary<string, object>();
+            IniFile ini = new IniFile(Program.getAviaDeviceFilename());
+            ini.WriteValue("query", "command", "Unload");
+            ini.DeleteSection("device");
+            Process p = new Process();
+            p.StartInfo.FileName = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaGetPhoneSize.exe");
+            p.StartInfo.Arguments = $"-QueryISP -start-service";
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.CreateNoWindow = true;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            p.OutputDataReceived += (s, o) =>
+            {
+                if (o.Data != null)
+                {
+                    Program.logIt($"[AviaGetPhoneSize]: {o.Data}");
+                    int pos = o.Data.IndexOf('=');
+                    if (pos > 0 && pos < o.Data.Length - 1)
+                    {
+                        string k = o.Data.Substring(0, pos);
+                        string v = o.Data.Substring(pos + 1);
+                        if (!string.IsNullOrEmpty(k) && !string.IsNullOrEmpty(v))
+                            ini.WriteValue("device", k, v);
+                    }
+                }
+            };
+            p.Start();
+            p.BeginOutputReadLine();
+            while (true)
+            {
+                System.Threading.Thread.Sleep(1000);
+                if (ct.IsCancellationRequested)
+                {
+                    Program.logIt($"handle_command: QueryLoad cancelled.");
+                    break;
+                }
+                string s = ini.GetString("device", "device", "");
+                if (string.Compare(s, "removed", true) == 0)
+                {
+                    ret.Add("errorcode", 0);
+                    ret.Add("removal", true);
+                    break;
+                }
+            }
+            if (!p.HasExited)
+            {
+                Process p1 = new Process();
+                p1.StartInfo.FileName = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaGetPhoneSize.exe");
+                p1.StartInfo.Arguments = $"-QueryISP -kill-service";
+                p1.StartInfo.UseShellExecute = false;
+                p1.StartInfo.CreateNoWindow = true;
+                p1.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                p1.Start();
+                p1.WaitForExit();
+            }
+            return ret;
+        }
+        static Dictionary<string, object> handle_QueryLoad_command(CancellationToken ct)
+        {
+            Dictionary<string, object> ret = new Dictionary<string, object>();
+            //CancellationToken ct = (CancellationToken)o;
+            IniFile ini = new IniFile(Program.getAviaDeviceFilename());
+            ini.WriteValue("query", "command", "Load");
+            ini.DeleteSection("device");
+            Process p = new Process();
+            p.StartInfo.FileName = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaGetPhoneSize.exe");
+            p.StartInfo.Arguments = $"-QueryISP -start-service";
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.CreateNoWindow = true;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            p.OutputDataReceived += (s, o) => 
+            {
+                if (o.Data != null)
+                {
+                    Program.logIt($"[AviaGetPhoneSize]: {o.Data}");
+                    int pos = o.Data.IndexOf('=');
+                    if(pos>0 && pos < o.Data.Length - 1)
+                    {
+                        string k = o.Data.Substring(0, pos);
+                        string v = o.Data.Substring(pos + 1);
+                        if (!string.IsNullOrEmpty(k) && !string.IsNullOrEmpty(v))
+                            ini.WriteValue("device", k, v);
+                    }
+                }
+            };
+            p.Start();
+            p.BeginOutputReadLine();
+            while (true)
+            {
+                System.Threading.Thread.Sleep(1000);
+                if (ct.IsCancellationRequested)
+                {
+                    Program.logIt($"handle_command: QueryLoad cancelled.");
+                    break;
+                }
+                string s = ini.GetString("device", "device", "");
+                if (string.Compare(s, "ready", true) == 0)
+                {
+                    ret.Add("errorcode", 0);
+                    ret.Add("arrival", true);
+                    break;
+                }
+            }
+            if (!p.HasExited)
+            {
+                Process p1 = new Process();
+                p1.StartInfo.FileName = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaGetPhoneSize.exe");
+                p1.StartInfo.Arguments = $"-QueryISP -kill-service";
+                p1.StartInfo.UseShellExecute = false;
+                p1.StartInfo.CreateNoWindow = true;
+                p1.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                p1.Start();
+                p1.WaitForExit();
+            }
+            return ret;
+        }
+        static Dictionary<string, object> handle_QueryPMP_command(CancellationToken ct)
+        {
+            Dictionary<string, object> ret = new Dictionary<string, object>();
+            //CancellationToken ct = (CancellationToken)o;
+            IniFile ini = new IniFile(Program.getAviaDeviceFilename());
+            ini.WriteValue("query", "command", "PMP");
+            //ini.DeleteSection("device");
+            Process p = new Process();
+            p.StartInfo.FileName = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaGetPhoneSize.exe");
+            p.StartInfo.Arguments = $"-QueryPMP";
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.CreateNoWindow = true;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            p.OutputDataReceived += (s, o) =>
+            {
+                if (o.Data != null)
+                {
+                    Program.logIt($"[AviaGetPhoneSize]: {o.Data}");
+                    int pos = o.Data.IndexOf('=');
+                    if (pos > 0 && pos < o.Data.Length - 1)
+                    {
+                        string k = o.Data.Substring(0, pos);
+                        string v = o.Data.Substring(pos + 1);
+                        if (!string.IsNullOrEmpty(k) && !string.IsNullOrEmpty(v))
+                        {
+                            ini.WriteValue("device", k, v);
+                            ret[k] = v;
+                        }
+                    }
+                }
+            };
+            p.Start();
+            p.BeginOutputReadLine();
+            while (!p.WaitForExit(1000))
+            {
+                //System.Threading.Thread.Sleep(1000);
+                if (ct.IsCancellationRequested)
+                {
+                    Program.logIt($"handle_command: QueryLoad cancelled.");
+                    break;
+                }
+            }
+            ret.Add("errorcode", p.ExitCode);
             return ret;
         }
         #endregion

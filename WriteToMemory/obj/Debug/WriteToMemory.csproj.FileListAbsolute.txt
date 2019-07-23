@@ -31,3 +31,4 @@ C:\projects\avia\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.csproj
 C:\projects\avia\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.csproj.CopyComplete
 C:\projects\avia\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.exe
 C:\projects\avia\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.pdb
+D:\projects\avia\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.csprojAssemblyReference.cache

@@ -3,3 +3,4 @@
 /.vs/FDPhoneRecognition/v16/Server/sqlite3
 /.vs/FDPhoneRecognition/v16
 /.vs
+*.cache
