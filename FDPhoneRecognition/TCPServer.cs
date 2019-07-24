@@ -644,9 +644,18 @@ namespace FDPhoneRecognition
                         var tokenSource = new CancellationTokenSource();
                         Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
                         {
-                            CancellationToken ct = (CancellationToken)o;
-                            return handle_QueryPMP_command(ct);
-                            /*
+                            //CancellationToken ct = (CancellationToken)o;
+                            //return handle_QueryPMP_command(ct);  
+                            // test get frame
+                            {
+                                Process p = new Process();
+                                p.StartInfo.FileName = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaGetPhoneSize.exe");
+                                p.StartInfo.Arguments = $"-QueryFrame";
+                                p.StartInfo.UseShellExecute = false;
+                                p.StartInfo.CreateNoWindow = true;
+                                p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                                p.Start();
+                            }
                             Dictionary<string, object> ret = new Dictionary<string, object>();
                             CancellationToken ct = (CancellationToken)o;
                             IniFile ini = new IniFile(Program.getAviaDeviceFilename());
@@ -668,7 +677,7 @@ namespace FDPhoneRecognition
                                     break;
                                 }
                             }
-                            return ret;*/
+                            return ret;
                         }, tokenSource.Token);
                         error = 0;
                         current_task = new Dictionary<string, object>();
@@ -681,6 +690,34 @@ namespace FDPhoneRecognition
                     {
                         // wait for MMI and QueryPMP.
                         // return only when 1) QueryPMP return, or 2) abort called
+#if true
+                        string fn = string.Empty;
+                        if (cmds.Length > 1)
+                            fn = cmds[1];
+                        else
+                            response = "ERR MMI Missing filename\n";
+                        try
+                        {
+                            using (System.IO.MemoryMappedFiles.MemoryMappedFile mmf = System.IO.MemoryMappedFiles.MemoryMappedFile.OpenExisting(fn))
+                            {
+                                IniFile ini = new IniFile(Program.getAviaDeviceFilename());
+                                ini.WriteValue("query", "command", "MMI");
+                                ini.WriteValue("query", "filename", fn);
+                                response = $"ACK MMI {fn}\n";
+                                var tokenSource = new CancellationTokenSource();
+                                Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) => 
+                                {
+                                    CancellationToken ct = (CancellationToken)o;
+                                    return handle_QueryPMP_command(ct);
+                                }, tokenSource.Token);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            response = $"ERR MMI {ex.Message}\n";
+                        }
+                        error = 4;
+#else
                         string fn = string.Empty;
                         try
                         {
@@ -717,6 +754,7 @@ namespace FDPhoneRecognition
                             current_task.Add("starttime", DateTime.Now);
                         }
                         catch (Exception) { }
+#endif
                     }
                     else if (string.Compare(cmds[0], "QueryLoad", true) == 0)
                     {
@@ -1001,6 +1039,7 @@ namespace FDPhoneRecognition
             IniFile ini = new IniFile(Program.getAviaDeviceFilename());
             ini.WriteValue("query", "command", "PMP");
             //ini.DeleteSection("device");
+            System.Threading.AutoResetEvent e = new AutoResetEvent(false);
             Process p = new Process();
             p.StartInfo.FileName = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaGetPhoneSize.exe");
             p.StartInfo.Arguments = $"-QueryPMP";
@@ -1010,7 +1049,11 @@ namespace FDPhoneRecognition
             p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
             p.OutputDataReceived += (s, o) =>
             {
-                if (o.Data != null)
+                if (o.Data == null)
+                {
+                    e.Set();
+                }
+                else
                 {
                     Program.logIt($"[AviaGetPhoneSize]: {o.Data}");
                     int pos = o.Data.IndexOf('=');
@@ -1028,15 +1071,16 @@ namespace FDPhoneRecognition
             };
             p.Start();
             p.BeginOutputReadLine();
-            while (!p.WaitForExit(1000))
+            while (!p.HasExited)
             {
-                //System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(1000);
                 if (ct.IsCancellationRequested)
                 {
                     Program.logIt($"handle_command: QueryLoad cancelled.");
                     break;
                 }
             }
+            e.WaitOne(1000);
             if (p.HasExited)
             {
                 ret.Add("errorcode", p.ExitCode);

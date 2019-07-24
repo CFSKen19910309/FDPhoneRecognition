@@ -21,6 +21,8 @@ namespace FDPhoneRecognition
             bool b = vc.SetCaptureProperty(CapProp.Mode, 0);
             b = vc.SetCaptureProperty(CapProp.FrameHeight, 1944);
             b = vc.SetCaptureProperty(CapProp.FrameWidth, 2592);
+            //double d = vc.GetCaptureProperty(CapProp.Buffersuze);
+            //b = vc.SetCaptureProperty(CapProp.Buffersuze, 0);
             System.Threading.EventWaitHandle[] evts = new System.Threading.EventWaitHandle[] 
             {
                 _evt,
