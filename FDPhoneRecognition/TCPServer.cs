@@ -325,7 +325,7 @@ namespace FDPhoneRecognition
                     if (Console.KeyAvailable)
                     {
                         Program.logIt("TCPServer::start: is going to be terminated by user key input.");
-                        break;
+                        quitEvent.Set();
                     }
                 }
             }
@@ -797,6 +797,15 @@ namespace FDPhoneRecognition
                         current_task.Add("task", t);
                         current_task.Add("id", "Unload");
                         current_task.Add("starttime", DateTime.Now);
+                    }
+                    else if (string.Compare(cmds[0], "QueryFrame", true) == 0)
+                    {
+                        Tuple<bool, string> res = VideoCapture.captre_frame();
+                        if (res.Item1)
+                        {
+                            error = 5;
+                            response = $"ACK frame {res.Item2}";
+                        }
                     }
                     else
                     {

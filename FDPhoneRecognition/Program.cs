@@ -70,8 +70,9 @@ namespace FDPhoneRecognition
                 m_Log.Debug($"[Main][Start-TCPServer]: EventName = {t_StopEventName}; IsNewCreated = {own.ToString()}");
                 if (own)
                 {
-                    //Task t = Task.Run(() => TCPServer.start(e));
+                    Task t = Task.Run(() => VideoCapture.run(e));
                     TCPServer.start(e, t_args.Parameters);
+                    t.Wait();
                 }
                 else
                 {
