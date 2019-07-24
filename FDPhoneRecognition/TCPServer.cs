@@ -804,7 +804,7 @@ namespace FDPhoneRecognition
                         if (res.Item1)
                         {
                             error = 5;
-                            response = $"ACK frame {res.Item2}";
+                            response = $"ACK frame {res.Item2}\n";
                         }
                     }
                     else
