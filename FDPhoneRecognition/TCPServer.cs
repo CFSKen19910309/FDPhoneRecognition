@@ -602,6 +602,7 @@ namespace FDPhoneRecognition
                     {
                         // wait for QueryISP.
                         // return only when 1) QueryISP return, or 2) abort called
+                        
                         var tokenSource = new CancellationTokenSource();
                         Task<Dictionary<string, object>> t = Task.Factory.StartNew((o) =>
                         {
@@ -618,7 +619,7 @@ namespace FDPhoneRecognition
                                     break;
                                 }
                                 string s = ini.GetString("device", "device", "");
-                                if (string.Compare(s, "ready", true) == 0)
+                                //if (string.Compare(s, "ready", true) == 0)
                                 {
                                     ret.Add("errorcode", 0);
                                     string sid = ini.GetString("device", "sizeid", "");

@@ -30,12 +30,15 @@ namespace FDPhoneRecognition
             };
             while (true)
             {
-                int r = System.Threading.EventWaitHandle.WaitAny(evts);
-                if (r == 0)
+                int r = System.Threading.EventWaitHandle.WaitAny(evts, 500);
+                if (r == 0 ) //|| r==System.Threading.WaitHandle.WaitTimeout)
                 {
                     // capture frame event set
                     Emgu.CV.Mat cm = new Emgu.CV.Mat();
                     vc.Read(cm);
+                    //Emgu.CV.CvInvoke.NamedWindow("CameraShowFromVideoSource", NamedWindowType.Normal);
+                    //Emgu.CV.CvInvoke.Imshow("CameraShowFromVideoSource", cm);
+                    //Emgu.CV.CvInvoke.WaitKey(10);
                     _frame_number += 1;
                     cm.Save(System.IO.Path.Combine(root, $"frame_{_frame_number:D5}.jpg"));
                     _evt2.Set();
@@ -53,7 +56,7 @@ namespace FDPhoneRecognition
             bool ret = false;
             string rets = "";
             _evt.Set();
-            if(_evt2.WaitOne(timeout))
+            if (_evt2.WaitOne(timeout))
             {
                 ret = true;
                 rets = $"frame_{_frame_number:D5}.jpg";
