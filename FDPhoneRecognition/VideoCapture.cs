@@ -42,6 +42,7 @@ namespace FDPhoneRecognition
                     _frame_number += 1;
                     cm.Save(System.IO.Path.Combine(root, $"frame_{_frame_number:D5}.jpg"));
                     _evt2.Set();
+                    GC.Collect();
                 }
                 else if (r == 1)
                 {
