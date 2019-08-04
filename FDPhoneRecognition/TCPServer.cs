@@ -648,6 +648,7 @@ namespace FDPhoneRecognition
                             //CancellationToken ct = (CancellationToken)o;
                             //return handle_QueryPMP_command(ct);  
                             // test get frame
+                            if(false)
                             {
                                 Process p = new Process();
                                 p.StartInfo.FileName = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaGetPhoneSize.exe");
