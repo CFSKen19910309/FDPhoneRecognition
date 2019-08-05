@@ -920,7 +920,7 @@ namespace FDPhoneRecognition
             Dictionary<string, object> ret = new Dictionary<string, object>();
             IniFile ini = new IniFile(Program.getAviaDeviceFilename());
             ini.WriteValue("query", "command", "Unload");
-            ini.DeleteSection("device");
+            //ini.DeleteSection("device");
             Process p = new Process();
             p.StartInfo.FileName = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaGetPhoneSize.exe");
             p.StartInfo.Arguments = $"-QueryISP -start-service";
