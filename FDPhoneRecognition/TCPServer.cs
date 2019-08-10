@@ -622,12 +622,18 @@ namespace FDPhoneRecognition
                                 //if (string.Compare(s, "ready", true) == 0)
                                 {
                                     ret.Add("errorcode", 0);
-                                    string sid = ini.GetString("device", "sizeid", "");
-                                    string cid = ini.GetString("device", "colorid", "");
-                                    //ret.Add("sizeid", ini.GetString("device", "sizeid", ""));
-                                    //ret.Add("colorid", ini.GetString("device", "colorid", ""));
-                                    //ret["script"] = mapSizeColorToScript(ret);
-                                    ret["script"] = mapSizeColorToScript(sid,cid);
+                                    string selection = ini.GetString("device", "select", "");
+                                    if (string.IsNullOrEmpty(selection))
+                                    {
+                                        string sid = ini.GetString("device", "sizeid", "");
+                                        string cid = ini.GetString("device", "colorid", "");
+                                        //ret.Add("sizeid", ini.GetString("device", "sizeid", ""));
+                                        //ret.Add("colorid", ini.GetString("device", "colorid", ""));
+                                        //ret["script"] = mapSizeColorToScript(ret);
+                                        ret["script"] = mapSizeColorToScript(sid, cid);
+                                    }
+                                    else
+                                        ret["script"] = selection;
                                     break;
                                 }
                             }
@@ -671,8 +677,18 @@ namespace FDPhoneRecognition
                                     break;
                                 }
                                 string s = ini.GetString("device", "device", "");
-                                string model = ini.GetString("device", "model", "");
-                                if (string.Compare(s, "ready", true) == 0 && !string.IsNullOrEmpty(model))
+                                string model = ini.GetString("device", "select", "");
+                                if (string.IsNullOrEmpty(model))
+                                {
+                                    model = ini.GetString("device", "model", "");
+                                    if (string.Compare(s, "ready", true) == 0 && !string.IsNullOrEmpty(model))
+                                    {
+                                        ret.Add("errorcode", 0);
+                                        ret.Add("model", model);
+                                        break;
+                                    }
+                                }
+                                else
                                 {
                                     ret.Add("errorcode", 0);
                                     ret.Add("model", model);
@@ -943,8 +959,11 @@ namespace FDPhoneRecognition
                     }
                 }
             };
-            p.Start();
-            p.BeginOutputReadLine();
+            if (false)
+            {
+                p.Start();
+                p.BeginOutputReadLine();
+            }
             while (true)
             {
                 System.Threading.Thread.Sleep(1000);
@@ -961,16 +980,19 @@ namespace FDPhoneRecognition
                     break;
                 }
             }
-            if (!p.HasExited)
+            if (false)
             {
-                Process p1 = new Process();
-                p1.StartInfo.FileName = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaGetPhoneSize.exe");
-                p1.StartInfo.Arguments = $"-QueryISP -kill-service";
-                p1.StartInfo.UseShellExecute = false;
-                p1.StartInfo.CreateNoWindow = true;
-                p1.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                p1.Start();
-                p1.WaitForExit();
+                if (!p.HasExited)
+                {
+                    Process p1 = new Process();
+                    p1.StartInfo.FileName = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaGetPhoneSize.exe");
+                    p1.StartInfo.Arguments = $"-QueryISP -kill-service";
+                    p1.StartInfo.UseShellExecute = false;
+                    p1.StartInfo.CreateNoWindow = true;
+                    p1.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    p1.Start();
+                    p1.WaitForExit();
+                }
             }
             return ret;
         }
@@ -980,7 +1002,8 @@ namespace FDPhoneRecognition
             //CancellationToken ct = (CancellationToken)o;
             IniFile ini = new IniFile(Program.getAviaDeviceFilename());
             ini.WriteValue("query", "command", "Load");
-            ini.DeleteSection("device");
+            ini.WriteValue("device", "device", "");
+            //ini.DeleteSection("device");
             Process p = new Process();
             p.StartInfo.FileName = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaGetPhoneSize.exe");
             p.StartInfo.Arguments = $"-QueryISP -start-service";
@@ -1003,8 +1026,11 @@ namespace FDPhoneRecognition
                     }
                 }
             };
-            p.Start();
-            p.BeginOutputReadLine();
+            if (false)
+            {
+                p.Start();
+                p.BeginOutputReadLine();
+            }
             while (true)
             {
                 System.Threading.Thread.Sleep(1000);
@@ -1021,16 +1047,19 @@ namespace FDPhoneRecognition
                     break;
                 }
             }
-            if (!p.HasExited)
+            if (false)
             {
-                Process p1 = new Process();
-                p1.StartInfo.FileName = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaGetPhoneSize.exe");
-                p1.StartInfo.Arguments = $"-QueryISP -kill-service";
-                p1.StartInfo.UseShellExecute = false;
-                p1.StartInfo.CreateNoWindow = true;
-                p1.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                p1.Start();
-                p1.WaitForExit();
+                if (!p.HasExited)
+                {
+                    Process p1 = new Process();
+                    p1.StartInfo.FileName = System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("FDHOME"), "AVIA", "AviaGetPhoneSize.exe");
+                    p1.StartInfo.Arguments = $"-QueryISP -kill-service";
+                    p1.StartInfo.UseShellExecute = false;
+                    p1.StartInfo.CreateNoWindow = true;
+                    p1.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    p1.Start();
+                    p1.WaitForExit();
+                }
             }
             return ret;
         }
