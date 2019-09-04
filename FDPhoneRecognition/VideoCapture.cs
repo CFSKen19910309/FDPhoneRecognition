@@ -41,6 +41,10 @@ namespace FDPhoneRecognition
                     //Emgu.CV.CvInvoke.WaitKey(10);
                     _frame_number += 1;
                     cm.Save(System.IO.Path.Combine(root, $"frame_{_frame_number:D5}.jpg"));
+                    if (_frame_number > 100)
+                    {
+                        _frame_number = 0;
+                    }
                     _evt2.Set();
                     GC.Collect();
                 }
