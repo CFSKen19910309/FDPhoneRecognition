@@ -32,6 +32,6 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2019.09.12.14")]
+[assembly: AssemblyVersion("2019.09.12.15")]
 //[assembly: AssemblyFileVersion("0.0.0.0")]
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = @".\FDData\FDPhoneRecognition\SystemFile\Log4Net.config")]

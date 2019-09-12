@@ -610,7 +610,7 @@ namespace FDPhoneRecognition
                             CancellationToken ct = (CancellationToken)o;
                             IniFile ini = new IniFile(Program.getAviaDeviceFilename());
                             ini.WriteValue("query", "command", "ISP");
-                            handle_QueryLoad_command(ct);
+                            //handle_QueryLoad_command(ct);
                             while (true)
                             {
                                 System.Threading.Thread.Sleep(1000);
