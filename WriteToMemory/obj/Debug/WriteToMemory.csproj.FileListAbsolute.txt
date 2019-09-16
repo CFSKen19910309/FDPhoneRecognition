@@ -32,3 +32,13 @@ C:\projects\avia\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.csproj
 C:\projects\avia\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.exe
 C:\projects\avia\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.pdb
 D:\projects\avia\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.csprojAssemblyReference.cache
+C:\projects\avia\scr\FDPhoneRecognition\WriteToMemory\bin\Debug\WriteToMemory.exe.config
+C:\projects\avia\scr\FDPhoneRecognition\WriteToMemory\bin\Debug\WriteToMemory.exe
+C:\projects\avia\scr\FDPhoneRecognition\WriteToMemory\bin\Debug\WriteToMemory.pdb
+C:\projects\avia\scr\FDPhoneRecognition\WriteToMemory\bin\Debug\log4net.dll
+C:\projects\avia\scr\FDPhoneRecognition\WriteToMemory\bin\Debug\log4net.xml
+C:\projects\avia\scr\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.csprojAssemblyReference.cache
+C:\projects\avia\scr\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.csproj.CoreCompileInputs.cache
+C:\projects\avia\scr\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.csproj.CopyComplete
+C:\projects\avia\scr\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.exe
+C:\projects\avia\scr\FDPhoneRecognition\WriteToMemory\obj\Debug\WriteToMemory.pdb

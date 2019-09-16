@@ -960,7 +960,7 @@ namespace FDPhoneRecognition
                     }
                 }
             };
-            if (false)
+            if (true)
             {
                 p.Start();
                 p.BeginOutputReadLine();
@@ -981,7 +981,7 @@ namespace FDPhoneRecognition
                     break;
                 }
             }
-            if (false)
+            if (true)
             {
                 if (!p.HasExited)
                 {

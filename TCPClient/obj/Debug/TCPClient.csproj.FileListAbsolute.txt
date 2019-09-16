@@ -32,3 +32,13 @@ C:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.csproj.CopyCom
 C:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.exe
 C:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.pdb
 D:\projects\avia\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.csprojAssemblyReference.cache
+C:\projects\avia\scr\FDPhoneRecognition\TCPClient\bin\Debug\TCPClient.exe.config
+C:\projects\avia\scr\FDPhoneRecognition\TCPClient\bin\Debug\TCPClient.exe
+C:\projects\avia\scr\FDPhoneRecognition\TCPClient\bin\Debug\TCPClient.pdb
+C:\projects\avia\scr\FDPhoneRecognition\TCPClient\bin\Debug\log4net.dll
+C:\projects\avia\scr\FDPhoneRecognition\TCPClient\bin\Debug\log4net.xml
+C:\projects\avia\scr\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.csprojAssemblyReference.cache
+C:\projects\avia\scr\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.csproj.CoreCompileInputs.cache
+C:\projects\avia\scr\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.csproj.CopyComplete
+C:\projects\avia\scr\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.exe
+C:\projects\avia\scr\FDPhoneRecognition\TCPClient\obj\Debug\TCPClient.pdb
